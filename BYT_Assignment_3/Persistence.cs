@@ -14,6 +14,6 @@ public abstract class Persistence<T> where T : class
             string json = File.ReadAllText(filePath);
             return JsonSerializer.Deserialize<List<T>>(json);
         }
-        return new List<T>(); 
+        return new List<T>();
     }
 }

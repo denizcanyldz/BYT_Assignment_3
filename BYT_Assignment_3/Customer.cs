@@ -3,8 +3,8 @@ public class Customer
     public static List<Customer> customers = new List<Customer>();
 
     public int CustomerID { get; set; }
-    public required string Name { get; set; }
-    public required string ContactNumber { get; set; }
+    public string Name { get; set; }
+    public string ContactNumber { get; set; }
     public string? Email { get; set; }
     public List<Reservation> Reservations{get;set;} = new List<Reservation>();
 
