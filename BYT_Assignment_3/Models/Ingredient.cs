@@ -7,7 +7,7 @@ public class Ingredient
     public int IngredientID { get; set; }
     public string Name { get; set; }
     public int QuantityInStock { get; set; }
-    public string Unit { get; set; } // e.g., "kg", "liters"
+    public string Unit { get; set; } 
     public bool IsPerishable { get; set; }
 
     public Ingredient(int ingredientID, string name, int quantityInStock, string unit, bool isPerishable)

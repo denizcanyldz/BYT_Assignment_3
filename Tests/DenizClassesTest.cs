@@ -8,7 +8,6 @@ public class DenizClassesTests
     [SetUp]
     public void SetUp()
     {
-        // Clear static lists before each test
         Order.Orders.Clear();
         OrderItem.OrderItems.Clear();
         MenuItem.MenuItems.Clear();
