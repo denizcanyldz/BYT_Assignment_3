@@ -1,3 +1,5 @@
+using BYT_Assignment_3.Models;
+
 namespace BYT_Assignment_3;
 
 public class MenuItem
@@ -14,6 +16,7 @@ public class MenuItem
     public int Calories { get; set; }
     public double DiscountPrice { get; set; }
     public List<Ingredient> Ingredients { get; set; } = new List<Ingredient>(); // Association with Ingredient
+    public Chef? PreparedBy { get; set; } //association with chef, so that 1 item can be prepared only by 1 chef
 
     public MenuItem(int itemID, string name, string description, double price, bool isAvailable, string category, int preparationTime, int calories, double discountPrice)
     {

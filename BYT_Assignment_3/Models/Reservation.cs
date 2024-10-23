@@ -6,6 +6,7 @@ public class Reservation
 
     public int ReservationID {get;set;}
     public Customer Customer{get;set;}
+
     //public Table Table {get;set;}
     public DateTime ReservationTime{get;set;}
     public int NumberOfGuests{get;set;}
