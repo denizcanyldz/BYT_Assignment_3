@@ -1,27 +1,117 @@
-public class Feedback
+namespace BYT_Assignment_3.Models
 {
-    public static List<Feedback> feedbacks = new List<Feedback>();
-
-    public int FeedbackID{get;set;}
-    public Customer Customer{get;set;}
-    public int Rating{get;set;}
-    public string Comments{get;set;}
-    public DateTime Date{get;set;}
-
-    public static double AverageRating(){
-        if(feedbacks.Count == 0){
-            return 0;
-        }
-        return feedbacks.Average(f => f.Rating);
-    }
-    public Feedback(int feedbackID, Customer customer, int rating, string comments, DateTime date)
+    [Serializable]
+    public class Feedback
     {
-        FeedbackID = feedbackID;
-        Customer = customer;
-        Rating = rating;
-        Comments = comments;
-        Date = date;
+        // -------------------------------
+        // Class/Static Attribute
+        // -------------------------------
+        private static int totalFeedbacks = 0;
 
-        feedbacks.Add(this);
+        /// <summary>
+        /// Gets or sets the total number of feedback entries.
+        /// </summary>
+        public static int TotalFeedbacks
+        {
+            get => totalFeedbacks;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("TotalFeedbacks cannot be negative.");
+                totalFeedbacks = value;
+            }
+        }
+
+        // -------------------------------
+        // Class Extent
+        // -------------------------------
+        private static List<Feedback> feedbacks = new List<Feedback>();
+
+        /// <summary>
+        /// Gets a read-only list of all feedback entries.
+        /// </summary>
+        public static IReadOnlyList<Feedback> GetAll()
+        {
+            return feedbacks.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Sets the entire feedback list (used during deserialization).
+        /// </summary>
+        public static void SetAll(List<Feedback> loadedFeedbacks)
+        {
+            feedbacks = loadedFeedbacks ?? new List<Feedback>();
+            TotalFeedbacks = feedbacks.Count;
+        }
+
+        // -------------------------------
+        // Mandatory Attributes (Simple)
+        // -------------------------------
+        public int FeedbackID { get; private set; }
+
+        private int customerID;
+
+        public int CustomerID
+        {
+            get => customerID;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("CustomerID must be positive.");
+                customerID = value;
+            }
+        }
+
+        private int rating;
+
+        public int Rating
+        {
+            get => rating;
+            set
+            {
+                if (value < 1 || value > 5)
+                    throw new ArgumentException("Rating must be between 1 and 5.");
+                rating = value;
+            }
+        }
+
+        // -------------------------------
+        // Optional Attributes
+        // -------------------------------
+        private string? comments;
+
+        public string? Comments
+        {
+            get => comments;
+            set
+            {
+                if(!string.IsNullOrEmpty(value) && value.Length > 500)
+                    throw new ArgumentException("Comments length cannot exceed 500 characters.");
+                comments = value;
+            }
+        }
+
+        // -------------------------------
+        // Constructors
+        // -------------------------------
+        /// <summary>
+        /// Initializes a new instance of the Feedback class with mandatory and optional attributes.
+        /// </summary>
+        public Feedback(int feedbackID, int customerID, int rating, string? comments = null)
+        {
+            FeedbackID = feedbackID;
+            CustomerID = customerID;
+            Rating = rating;
+            Comments = comments;
+
+            // Add to class extent
+            feedbacks.Add(this);
+            TotalFeedbacks = feedbacks.Count;
+        }
+
+        /// <summary>
+        /// Parameterless constructor for serialization.
+        /// </summary>
+        public Feedback() { }
     }
 }

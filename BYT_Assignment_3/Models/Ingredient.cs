@@ -1,51 +1,117 @@
-namespace BYT_Assignment_3;
-
-public class Ingredient
+namespace BYT_Assignment_3.Models
 {
-    public static List<Ingredient> Ingredients = new List<Ingredient>();
-
-    public int IngredientID { get; set; }
-    public string Name { get; set; }
-    public int QuantityInStock { get; set; }
-    public string Unit { get; set; } 
-    public bool IsPerishable { get; set; }
-
-    public Ingredient(int ingredientID, string name, int quantityInStock, string unit, bool isPerishable)
+    [Serializable]
+    public class Ingredient
     {
-        if (string.IsNullOrEmpty(name) || quantityInStock < 0)
+        // -------------------------------
+        // Class/Static Attribute
+        // -------------------------------
+        private static int totalIngredients = 0;
+
+        /// <summary>
+        /// Gets or sets the total number of ingredients.
+        /// </summary>
+        public static int TotalIngredients
         {
-            throw new ArgumentException("Invalid ingredient details.");
+            get => totalIngredients;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("TotalIngredients cannot be negative.");
+                totalIngredients = value;
+            }
         }
 
-        IngredientID = ingredientID;
-        Name = name;
-        QuantityInStock = quantityInStock;
-        Unit = unit;
-        IsPerishable = isPerishable;
+        // -------------------------------
+        // Class Extent
+        // -------------------------------
+        private static List<Ingredient> ingredients = new List<Ingredient>();
 
-        Ingredients.Add(this);
-    }
-
-    public void AddStock(int amount)
-    {
-        if (amount <= 0)
+        /// <summary>
+        /// Gets a read-only list of all ingredients.
+        /// </summary>
+        public static IReadOnlyList<Ingredient> GetAll()
         {
-            throw new ArgumentException("Amount must be positive.");
+            return ingredients.AsReadOnly();
         }
-        QuantityInStock += amount;
-    }
 
-    public void RemoveStock(int amount)
-    {
-        if (amount <= 0 || amount > QuantityInStock)
+        /// <summary>
+        /// Sets the entire ingredient list (used during deserialization).
+        /// </summary>
+        public static void SetAll(List<Ingredient> loadedIngredients)
         {
-            throw new InvalidOperationException("Insufficient stock or invalid amount.");
+            ingredients = loadedIngredients ?? new List<Ingredient>();
+            TotalIngredients = ingredients.Count;
         }
-        QuantityInStock -= amount;
-    }
 
-    public int CheckStock()
-    {
-        return QuantityInStock;
+        // -------------------------------
+        // Mandatory Attributes (Simple)
+        // -------------------------------
+        public int IngredientID { get; private set; }
+
+        private string name;
+
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if(string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Name cannot be null or empty.");
+                name = value;
+            }
+        }
+
+        private double quantity;
+
+        public double Quantity
+        {
+            get => quantity;
+            set
+            {
+                if(value < 0)
+                    throw new ArgumentException("Quantity cannot be negative.");
+                quantity = value;
+            }
+        }
+
+        // -------------------------------
+        // Optional Attributes
+        // -------------------------------
+        private string? description;
+
+        public string? Description
+        {
+            get => description;
+            set
+            {
+                if(!string.IsNullOrEmpty(value) && value.Length > 300)
+                    throw new ArgumentException("Description length cannot exceed 300 characters.");
+                description = value;
+            }
+        }
+
+        // -------------------------------
+        // Constructors
+        // -------------------------------
+        /// <summary>
+        /// Initializes a new instance of the Ingredient class with mandatory and optional attributes.
+        /// </summary>
+        public Ingredient(int ingredientID, string name, double quantity, string? description = null)
+        {
+            IngredientID = ingredientID;
+            Name = name;
+            Quantity = quantity;
+            Description = description;
+
+            // Add to class extent
+            ingredients.Add(this);
+            TotalIngredients = ingredients.Count;
+        }
+
+        /// <summary>
+        /// Parameterless constructor for serialization.
+        /// </summary>
+        public Ingredient() { }
     }
 }
