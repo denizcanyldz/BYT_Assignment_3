@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int OrderID { get; private set; }
+        public int OrderID { get; set; }
 
         private DateTime orderDate;
 

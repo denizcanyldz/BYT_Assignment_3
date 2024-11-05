@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int CustomerID { get; private set; }
+        public int CustomerID { get; set; }
 
         private string name;
 
