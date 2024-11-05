@@ -166,7 +166,6 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         private bool IsValidDiscountCode(string code)
         {
-            // Simple discount code validation logic (e.g., alphanumeric, specific length)
             return code.Length == 10 && System.Text.RegularExpressions.Regex.IsMatch(code, @"^[a-zA-Z0-9]+$");
         }
     }
