@@ -39,7 +39,6 @@ namespace BYT_Assignment_3.Persistences
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving all data: {ex.Message}");
-                // Optionally, implement logging or additional error handling
             }
         }
 
