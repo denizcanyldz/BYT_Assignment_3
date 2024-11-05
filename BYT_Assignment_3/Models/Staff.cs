@@ -73,7 +73,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int StaffID { get; set; }
+        public int StaffID { get; private set; }
 
         private string name;
 

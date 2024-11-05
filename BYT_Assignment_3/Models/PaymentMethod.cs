@@ -47,7 +47,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int PaymentMethodID { get; set; }
+        public int PaymentMethodID { get; private set; }
 
         private string methodName;
 

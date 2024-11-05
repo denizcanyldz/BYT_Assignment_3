@@ -47,7 +47,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int OrderItemID { get; set; }
+        public int OrderItemID { get; private  set; }
 
         private string itemName;
 
@@ -56,7 +56,7 @@ namespace BYT_Assignment_3.Models
             get => itemName;
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
+                if(string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("ItemName cannot be null or empty.");
                 itemName = value;
             }
@@ -69,7 +69,7 @@ namespace BYT_Assignment_3.Models
             get => quantity;
             set
             {
-                if (value <= 0)
+                if(value <= 0)
                     throw new ArgumentException("Quantity must be greater than zero.");
                 quantity = value;
             }
@@ -82,7 +82,7 @@ namespace BYT_Assignment_3.Models
             get => price;
             set
             {
-                if (value < 0)
+                if(value < 0)
                     throw new ArgumentException("Price cannot be negative.");
                 price = value;
             }
@@ -98,7 +98,7 @@ namespace BYT_Assignment_3.Models
             get => specialInstructions;
             set
             {
-                if (!string.IsNullOrEmpty(value) && value.Length > 250)
+                if(!string.IsNullOrEmpty(value) && value.Length > 250)
                     throw new ArgumentException("SpecialInstructions length cannot exceed 250 characters.");
                 specialInstructions = value;
             }

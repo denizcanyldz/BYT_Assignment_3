@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int InventoryID { get; set; }
+        public int InventoryID { get; private set; }
 
         private DateTime lastRestockDate;
 
