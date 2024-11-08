@@ -31,7 +31,10 @@ namespace BYT_Assignment_3.Persistences
                     PaymentMethods = new List<PaymentMethod>(PaymentMethod.GetAll()),
                     Payments = new List<Payment>(Payment.GetAll()),
                     Reservations = new List<Reservation>(Reservation.GetAll()),
-                    Tables = new List<Table>(Table.GetAll())
+                    Tables = new List<Table>(Table.GetAll()),
+                    Menus = new List<Menu>(Menu.GetAll()),
+                    Restaurants = new List<Restaurant>(Restaurant.GetAll()),
+                    WaiterBartenders = new List<WaiterBartender>(WaiterBartender.GetAll()),
                 };
 
                 Persistence.SaveAll(FilePath, extents);
@@ -66,6 +69,10 @@ namespace BYT_Assignment_3.Persistences
                 Payment.SetAll(extents.Payments);
                 Reservation.SetAll(extents.Reservations);
                 Table.SetAll(extents.Tables);
+                Restaurant.SetAll(extents.Restaurants);
+                Menu.SetAll(extents.Menus);
+                WaiterBartender.SetAll(extents.WaiterBartenders);
+                
             }
             catch (Exception ex)
             {
