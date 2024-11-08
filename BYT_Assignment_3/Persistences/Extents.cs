@@ -20,4 +20,7 @@ public class Extents
     public List<Reservation> Reservations { get; set; } = new List<Reservation>();
     public List<Table> Tables { get; set; } = new List<Table>();
     public List<Waiter> Waiters { get; set; } = new List<Waiter>();
+    public List<Menu> Menus { get; set; } = new List<Menu>();
+    public List<Restaurant> Restaurants { get; set; } = new List<Restaurant>();
+    public List<WaiterBartender> WaiterBartenders { get; set; } = new List<WaiterBartender>();
 }
