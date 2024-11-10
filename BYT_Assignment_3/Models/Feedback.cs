@@ -147,5 +147,30 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Feedback() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Feedback.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Feedback other)
+            {
+                return FeedbackID == other.FeedbackID &&
+                       CustomerID == other.CustomerID &&
+                       Rating == other.Rating &&
+                       DateTime == other.DateTime &&
+                       AverageRating == other.AverageRating &&
+                       Comments == other.Comments;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FeedbackID, CustomerID, Rating, DateTime, AverageRating, Comments);
+        }
     }
 }

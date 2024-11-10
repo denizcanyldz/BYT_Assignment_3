@@ -131,5 +131,29 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Ingredient() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Ingredient.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Ingredient other)
+            {
+                return IngredientID == other.IngredientID &&
+                       Name == other.Name &&
+                       Quantity == other.Quantity &&
+                       Unit == other.Unit &&
+                       IsPerishable == other.IsPerishable;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(IngredientID, Name, Quantity, Unit, IsPerishable);
+        }
     }
 }

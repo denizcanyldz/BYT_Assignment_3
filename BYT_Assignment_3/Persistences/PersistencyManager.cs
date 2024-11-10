@@ -4,27 +4,27 @@ using BYT_Assignment_3.Models;
 
 namespace BYT_Assignment_3.Persistences
 {
-    public static class PersistencyManager
+   public static class PersistencyManager
     {
-        private const string FilePath = "extents.xml";
+        private const string DefaultFilePath = "extents.xml"; // Compile-time constant
 
         /// <summary>
-        /// Saves all class extents to a single XML file.
+        /// Saves all class extents to a specified XML file.
         /// </summary>
-        public static void SaveAll()
+        /// <param name="filePath">Path to the XML file. Defaults to "extents.xml".</param>
+        public static void SaveAll(string filePath = DefaultFilePath)
         {
             try
             {
                 Extents extents = new Extents
                 {
                     Customers = new List<Customer>(Customer.GetAll()),
-                    Chefs = new List<Chef>(Chef.GetAll()),
                     Bartenders = new List<Bartender>(Bartender.GetAll()),
-                    Waiters = new List<Waiter>(Waiter.GetAll()),
-                    Managers = new List<Manager>(Manager.GetAll()),
+                    Chefs = new List<Chef>(Chef.GetAll()),
                     Feedbacks = new List<Feedback>(Feedback.GetAll()),
                     Ingredients = new List<Ingredient>(Ingredient.GetAll()),
                     Inventories = new List<Inventory>(Inventory.GetAll()),
+                    Managers = new List<Manager>(Manager.GetAll()),
                     MenuItems = new List<MenuItem>(MenuItem.GetAll()),
                     Orders = new List<Order>(Order.GetAll()),
                     OrderItems = new List<OrderItem>(OrderItem.GetAll()),
@@ -32,12 +32,13 @@ namespace BYT_Assignment_3.Persistences
                     Payments = new List<Payment>(Payment.GetAll()),
                     Reservations = new List<Reservation>(Reservation.GetAll()),
                     Tables = new List<Table>(Table.GetAll()),
+                    Waiters = new List<Waiter>(Waiter.GetAll()),
                     Menus = new List<Menu>(Menu.GetAll()),
                     Restaurants = new List<Restaurant>(Restaurant.GetAll()),
                     WaiterBartenders = new List<WaiterBartender>(WaiterBartender.GetAll()),
                 };
 
-                Persistence.SaveAll(FilePath, extents);
+                Persistence.SaveAll(filePath, extents);
             }
             catch (Exception ex)
             {
@@ -46,22 +47,22 @@ namespace BYT_Assignment_3.Persistences
         }
 
         /// <summary>
-        /// Loads all class extents from a single XML file.
+        /// Loads all class extents from a specified XML file.
         /// </summary>
-        public static void LoadAll()
+        /// <param name="filePath">Path to the XML file. Defaults to "extents.xml".</param>
+        public static void LoadAll(string filePath = DefaultFilePath)
         {
             try
             {
-                Extents extents = Persistence.LoadAll(FilePath);
+                Extents extents = Persistence.LoadAll(filePath);
 
                 Customer.SetAll(extents.Customers);
-                Chef.SetAll(extents.Chefs);
                 Bartender.SetAll(extents.Bartenders);
-                Waiter.SetAll(extents.Waiters);
-                Manager.SetAll(extents.Managers);
+                Chef.SetAll(extents.Chefs);
                 Feedback.SetAll(extents.Feedbacks);
                 Ingredient.SetAll(extents.Ingredients);
                 Inventory.SetAll(extents.Inventories);
+                Manager.SetAll(extents.Managers);
                 MenuItem.SetAll(extents.MenuItems);
                 Order.SetAll(extents.Orders);
                 OrderItem.SetAll(extents.OrderItems);
@@ -69,10 +70,10 @@ namespace BYT_Assignment_3.Persistences
                 Payment.SetAll(extents.Payments);
                 Reservation.SetAll(extents.Reservations);
                 Table.SetAll(extents.Tables);
-                Restaurant.SetAll(extents.Restaurants);
+                Waiter.SetAll(extents.Waiters);
                 Menu.SetAll(extents.Menus);
+                Restaurant.SetAll(extents.Restaurants);
                 WaiterBartender.SetAll(extents.WaiterBartenders);
-                
             }
             catch (Exception ex)
             {

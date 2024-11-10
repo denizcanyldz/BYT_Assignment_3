@@ -206,5 +206,32 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public MenuItem() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current MenuItem.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is MenuItem other)
+            {
+                return MenuItemID == other.MenuItemID &&
+                       Name == other.Name &&
+                       IsAvailable == other.IsAvailable &&
+                       BasePrice == other.BasePrice &&
+                       Calories == other.Calories &&
+                       DiscountPrice == other.DiscountPrice &&
+                       PreparationTime == other.PreparationTime;
+                // Excluding Ingredients collection to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(MenuItemID, Name, IsAvailable, BasePrice, Calories, DiscountPrice, PreparationTime);
+        }
     }
 }

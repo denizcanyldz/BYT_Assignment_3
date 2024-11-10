@@ -88,5 +88,28 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Chef() : base() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Chef.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Chef other)
+            {
+                return StaffID == other.StaffID &&
+                       Name == other.Name &&
+                       ContactNumber == other.ContactNumber &&
+                       Specialty == other.Specialty;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(StaffID, Name, ContactNumber, Specialty);
+        }
     }
 }

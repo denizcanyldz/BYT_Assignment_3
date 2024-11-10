@@ -132,5 +132,29 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public OrderItem() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current OrderItem.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is OrderItem other)
+            {
+                return OrderItemID == other.OrderItemID &&
+                       ItemName == other.ItemName &&
+                       Quantity == other.Quantity &&
+                       Price == other.Price &&
+                       SpecialInstructions == other.SpecialInstructions;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(OrderItemID, ItemName, Quantity, Price, SpecialInstructions);
+        }
     }
 }

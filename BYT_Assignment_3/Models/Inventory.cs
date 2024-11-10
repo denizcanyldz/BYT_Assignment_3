@@ -121,5 +121,27 @@ namespace BYT_Assignment_3.Models
         {
            
         }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Inventory.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Inventory other)
+            {
+                return InventoryID == other.InventoryID &&
+                       LastRestockDate == other.LastRestockDate;
+                // Excluding Ingredients collection to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(InventoryID, LastRestockDate);
+        }
     }
 }

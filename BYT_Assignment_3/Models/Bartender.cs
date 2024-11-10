@@ -13,6 +13,7 @@ namespace BYT_Assignment_3.Models
         // Class/Static Attribute
         // -------------------------------
         private static int totalBartenders = 0;
+        
 
         /// <summary>
         /// Gets or sets the total number of bartenders.
@@ -69,5 +70,27 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Bartender() : base() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Bartender.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Bartender other)
+            {
+                return StaffID == other.StaffID &&
+                       Name == other.Name &&
+                       ContactNumber == other.ContactNumber;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(StaffID, Name, ContactNumber);
+        }
     }
 }

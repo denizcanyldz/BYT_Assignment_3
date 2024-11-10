@@ -135,5 +135,29 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Payment() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Payment.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Payment other)
+            {
+                return PaymentID == other.PaymentID &&
+                       OrderID == other.OrderID &&
+                       Amount == other.Amount &&
+                       DateTime == other.DateTime &&
+                       TransactionID == other.TransactionID;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(PaymentID, OrderID, Amount, DateTime, TransactionID);
+        }
     }
 }

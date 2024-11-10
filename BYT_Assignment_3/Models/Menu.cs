@@ -82,5 +82,28 @@ namespace BYT_Assignment_3.Models
             menus.Add(this);
             TotalMenus = menus.Count;
         }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Menu.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Menu other)
+            {
+                return MenuId == other.MenuId &&
+                       // Excluding MenuItems collection to simplify equality
+                       // Alternatively, implement sequence equality if needed
+                       true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(MenuId);
+        }
     }
 }

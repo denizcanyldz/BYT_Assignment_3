@@ -61,6 +61,54 @@ namespace BYT_Assignment_3.Models
         public Dictionary<string, string> OpeningHours { get; set; } = new Dictionary<string, string>();
 
         
+        public List<Order> Orders { get; set; } = new List<Order>();
+        public List<Payment> Payments { get; set; } = new List<Payment>();
+        public List<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        
+        
+        // -------------------------------
+        // Methods to Add Orders, Payments, Feedbacks, Reservations
+        // -------------------------------
+        /// <summary>
+        /// Adds an Order to the Restaurant.
+        /// </summary>
+        public void AddOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentException("Order cannot be null.");
+            Orders.Add(order);
+        }
+
+        /// <summary>
+        /// Adds a Payment to the Restaurant.
+        /// </summary>
+        public void AddPayment(Payment payment)
+        {
+            if (payment == null)
+                throw new ArgumentException("Payment cannot be null.");
+            Payments.Add(payment);
+        }
+
+        /// <summary>
+        /// Adds a Feedback to the Restaurant.
+        /// </summary>
+        public void AddFeedback(Feedback feedback)
+        {
+            if (feedback == null)
+                throw new ArgumentException("Feedback cannot be null.");
+            Feedbacks.Add(feedback);
+        }
+
+        /// <summary>
+        /// Adds a Reservation to the Restaurant.
+        /// </summary>
+        public void AddReservation(Reservation reservation)
+        {
+            if (reservation == null)
+                throw new ArgumentException("Reservation cannot be null.");
+            Reservations.Add(reservation);
+        }
         
         
         /// <summary>
@@ -96,5 +144,29 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Restaurant(){}
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Restaurant.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Restaurant other)
+            {
+                return RestaurantId == other.RestaurantId &&
+                       Name == other.Name &&
+                       Address == other.Address &&
+                       ContactNumber == other.ContactNumber;
+                // Excluding Menus and OpeningHours collections to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(RestaurantId, Name, Address, ContactNumber);
+        }
     }
 }

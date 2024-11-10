@@ -7,10 +7,6 @@ using BYT_Assignment_3;
 
 namespace Tests.PersistenceTests
 {
-    [TestFixture]
-    public class PersistencyTests
-    {
-       
-    }
+    
 }
 
