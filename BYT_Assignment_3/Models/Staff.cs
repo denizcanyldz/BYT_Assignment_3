@@ -75,7 +75,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int StaffID { get; private set; }
+        public int StaffID { get; set; }
 
         private string name;
 
@@ -84,7 +84,7 @@ namespace BYT_Assignment_3.Models
             get => name;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Name cannot be null or empty.");
                 name = value;
             }
@@ -100,7 +100,7 @@ namespace BYT_Assignment_3.Models
             get => contactNumber;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 50)
+                if (!string.IsNullOrEmpty(value) && value.Length > 50)
                     throw new ArgumentException("ContactNumber length cannot exceed 50 characters.");
                 contactNumber = value;
             }

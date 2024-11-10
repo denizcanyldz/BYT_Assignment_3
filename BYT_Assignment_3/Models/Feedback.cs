@@ -47,7 +47,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int FeedbackID { get; private set; }
+        public int FeedbackID { get; set; }
 
         private int customerID;
 

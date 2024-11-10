@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int TableNumber { get; private set; }
+        public int TableNumber { get; set; }
 
         private int maxSeats;
 

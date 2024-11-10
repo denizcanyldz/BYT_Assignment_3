@@ -1,3 +1,5 @@
+using System.Xml.Serialization;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
@@ -49,15 +51,16 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int RestaurantId { get; private set; }
+        public int RestaurantId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
         public string ContactNumber { get; set; }
         public List<Menu> Menus { get; set; }
-        
+
         // -------------------------------
         // Optional Attributes
         // -------------------------------
+        [XmlIgnore] // Prevent direct serialization of the collection
         public Dictionary<string, string> OpeningHours { get; set; } = new Dictionary<string, string>();
 
         

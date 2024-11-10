@@ -47,7 +47,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int IngredientID { get; private set; }
+        public int IngredientID { get; set; }
 
         private string name;
 

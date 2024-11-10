@@ -47,7 +47,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int OrderItemID { get; private  set; }
+        public int OrderItemID { get; set; }
 
         private string itemName;
 
