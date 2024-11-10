@@ -10,6 +10,23 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         private static int totalCustomers = 0;
 
+        public override bool Equals(object obj)
+        {
+            if (obj is Customer other)
+            {
+                return CustomerID == other.CustomerID &&
+                       Name == other.Name &&
+                       Email == other.Email &&
+                       PhoneNumber == other.PhoneNumber;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(CustomerID, Name, Email, PhoneNumber);
+        }
+
         /// <summary>
         /// Gets or sets the total number of customers.
         /// </summary>
@@ -80,14 +97,14 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        private string? phoneNumber;
+        private string phoneNumber;
 
-        public string? PhoneNumber
+        public string PhoneNumber
         {
             get => phoneNumber;
             set
             {
-                if(!string.IsNullOrEmpty(value) && !IsValidPhoneNumber(value))
+                if (!IsValidPhoneNumber(value))
                     throw new ArgumentException("Invalid phone number format.");
                 phoneNumber = value;
             }

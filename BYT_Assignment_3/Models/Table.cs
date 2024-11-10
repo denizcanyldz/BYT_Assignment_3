@@ -148,5 +148,29 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Table() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Table.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Table other)
+            {
+                return TableNumber == other.TableNumber &&
+                       MaxSeats == other.MaxSeats &&
+                       Location == other.Location &&
+                       SeatingArrangement == other.SeatingArrangement;
+                // Excluding Orders collection to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(TableNumber, MaxSeats, Location, SeatingArrangement);
+        }
     }
 }

@@ -99,5 +99,27 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public PaymentMethod() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current PaymentMethod.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is PaymentMethod other)
+            {
+                return PaymentMethodID == other.PaymentMethodID &&
+                       MethodName == other.MethodName &&
+                       Description == other.Description;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(PaymentMethodID, MethodName, Description);
+        }
     }
 }
