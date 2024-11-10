@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int RestaurantId { get; set; }
+        public int RestaurantId { get; private set; }
         public string Name { get; set; }
         public string Address { get; set; }
         public string ContactNumber { get; set; }

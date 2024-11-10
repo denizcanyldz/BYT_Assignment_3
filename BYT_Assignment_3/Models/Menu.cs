@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int MenuId { get; set; }
+        public int MenuId { get; private set; }
         public List<MenuItem> MenuItems { get; set; }
         
         
