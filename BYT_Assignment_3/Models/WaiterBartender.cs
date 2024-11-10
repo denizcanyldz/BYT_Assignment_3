@@ -48,37 +48,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? section;
-        private string? licenseNumber;
         private double? bonus;
-
-        /// <summary>
-        /// Gets or sets the section for WaiterBartender if assigned as a Waiter.
-        /// </summary>
-        public string? Section
-        {
-            get => section;
-            set
-            {
-                if (!string.IsNullOrEmpty(value) && value.Length > 100)
-                    throw new ArgumentException("Section length cannot exceed 100 characters.");
-                section = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the license number for WaiterBartender if assigned as a Bartender.
-        /// </summary>
-        public string? LicenseNumber
-        {
-            get => licenseNumber;
-            set
-            {
-                if (!string.IsNullOrEmpty(value) && value.Length > 50)
-                    throw new ArgumentException("LicenseNumber length cannot exceed 50 characters.");
-                licenseNumber = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the bonus for the WaiterBartender. Must be non-negative.
@@ -102,15 +72,11 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         /// <param name="staffID">The unique identifier for the staff member.</param>
         /// <param name="name">The name of the staff member.</param>
-        /// <param name="section">The section assigned if the staff member is acting as a waiter.</param>
-        /// <param name="licenseNumber">The license number if the staff member is acting as a bartender.</param>
-        /// <param name="shift">The shift assigned to the staff member.</param>
         /// <param name="bonus">The bonus assigned to the staff member, if any.</param>
-        public WaiterBartender(int staffID, string name, string? section = null, string? licenseNumber = null, string? shift = null, double? bonus = null)
-            : base(staffID, name, shift)
+        /// <param name="contactNumber">The contact number for the staff member.</param>
+        public WaiterBartender(int staffID, string name, double? bonus = null, string? contactNumber = null)
+            : base(staffID, name, contactNumber)
         {
-            Section = section;
-            LicenseNumber = licenseNumber;
             Bonus = bonus;
 
             // Add to WaiterBartender extent

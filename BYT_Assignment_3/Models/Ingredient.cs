@@ -78,16 +78,33 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? description;
+        private string unit;
 
-        public string? Description
+        /// <summary>
+        /// Gets or sets the unit of measurement for the ingredient.
+        /// </summary>
+        public string Unit
         {
-            get => description;
+            get => unit;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 300)
-                    throw new ArgumentException("Description length cannot exceed 300 characters.");
-                description = value;
+                if(string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Unit cannot be null or empty.");
+                unit = value;
+            }
+        }
+
+        private bool isPerishable;
+
+        /// <summary>
+        /// Gets or sets whether the ingredient is perishable.
+        /// </summary>
+        public bool IsPerishable
+        {
+            get => isPerishable;
+            set
+            {
+                isPerishable = value;
             }
         }
 
@@ -97,12 +114,13 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Ingredient class with mandatory and optional attributes.
         /// </summary>
-        public Ingredient(int ingredientID, string name, double quantity, string? description = null)
+        public Ingredient(int ingredientID, string name, double quantity, string unit, bool isPerishable)
         {
             IngredientID = ingredientID;
             Name = name;
             Quantity = quantity;
-            Description = description;
+            Unit = unit;
+            IsPerishable = isPerishable;
 
             // Add to class extent
             ingredients.Add(this);

@@ -74,8 +74,8 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Chef class with mandatory and optional attributes.
         /// </summary>
-        public Chef(int staffID, string name, string? specialty = null, string? shift = null)
-            : base(staffID, name, shift)
+        public Chef(int staffID, string name, string? specialty = null, string? contactNumber = null)
+            : base(staffID, name, contactNumber)
         {
             Specialty = specialty;
 

@@ -52,32 +52,14 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
-        // Optional Attributes
-        // -------------------------------
-        private string? licenseNumber;
-
-        public string? LicenseNumber
-        {
-            get => licenseNumber;
-            set
-            {
-                if(!string.IsNullOrEmpty(value) && value.Length > 50)
-                    throw new ArgumentException("LicenseNumber length cannot exceed 50 characters.");
-                licenseNumber = value;
-            }
-        }
-
-        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
-        /// Initializes a new instance of the Bartender class with mandatory and optional attributes.
+        /// Initializes a new instance of the Bartender class with mandatory attributes.
         /// </summary>
-        public Bartender(int staffID, string name, string? licenseNumber = null, string? shift = null)
-            : base(staffID, name, shift)
+        public Bartender(int staffID, string name, string? contactNumber = null)
+            : base(staffID, name, contactNumber)
         {
-            LicenseNumber = licenseNumber;
-
             // Add to bartender extent
             bartenders.Add(this);
             TotalBartenders = bartenders.Count;

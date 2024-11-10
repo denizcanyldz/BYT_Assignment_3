@@ -75,6 +75,38 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        private DateTime dateTime;
+
+        /// <summary>
+        /// Gets or sets the date and time of the feedback.
+        /// </summary>
+        public DateTime DateTime
+        {
+            get => dateTime;
+            set
+            {
+                if (value > DateTime.Now)
+                    throw new ArgumentException("DateTime cannot be in the future.");
+                dateTime = value;
+            }
+        }
+
+        private double averageRating;
+
+        /// <summary>
+        /// Gets or sets the average rating of the feedback.
+        /// </summary>
+        public double AverageRating
+        {
+            get => averageRating;
+            set
+            {
+                if (value < 1 || value > 5)
+                    throw new ArgumentException("AverageRating must be between 1 and 5.");
+                averageRating = value;
+            }
+        }
+
         // -------------------------------
         // Optional Attributes
         // -------------------------------
@@ -97,11 +129,13 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Feedback class with mandatory and optional attributes.
         /// </summary>
-        public Feedback(int feedbackID, int customerID, int rating, string? comments = null)
+        public Feedback(int feedbackID, int customerID, int rating, DateTime dateTime, double averageRating, string? comments = null)
         {
             FeedbackID = feedbackID;
             CustomerID = customerID;
             Rating = rating;
+            DateTime = dateTime;
+            AverageRating = averageRating;
             Comments = comments;
 
             // Add to class extent

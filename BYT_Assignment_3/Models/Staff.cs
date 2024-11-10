@@ -5,6 +5,8 @@ namespace BYT_Assignment_3.Models
     [Serializable]
     [XmlInclude(typeof(Chef))]
     [XmlInclude(typeof(Bartender))]
+    [XmlInclude(typeof(Waiter))]
+    [XmlInclude(typeof(WaiterBartender))]
     public abstract class Staff
     {
         // -------------------------------
@@ -91,16 +93,16 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? shift;
+        private string? contactNumber;
 
-        public string? Shift
+        public string? ContactNumber
         {
-            get => shift;
+            get => contactNumber;
             set
             {
                 if(!string.IsNullOrEmpty(value) && value.Length > 50)
-                    throw new ArgumentException("Shift length cannot exceed 50 characters.");
-                shift = value;
+                    throw new ArgumentException("ContactNumber length cannot exceed 50 characters.");
+                contactNumber = value;
             }
         }
 
@@ -110,11 +112,11 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Staff class with mandatory and optional attributes.
         /// </summary>
-        protected Staff(int staffID, string name, string? shift = null)
+        protected Staff(int staffID, string name, string? contactNumber = null)
         {
             StaffID = staffID;
             Name = name;
-            Shift = shift;
+            ContactNumber = contactNumber;
 
             // Add to class extent
             AddStaff(this);

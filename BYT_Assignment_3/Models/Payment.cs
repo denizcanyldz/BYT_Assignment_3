@@ -75,6 +75,22 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        private DateTime dateTime;
+
+        /// <summary>
+        /// Gets or sets the date and time of the payment.
+        /// </summary>
+        public DateTime DateTime
+        {
+            get => dateTime;
+            set
+            {
+                if (value > DateTime.Now)
+                    throw new ArgumentException("DateTime cannot be in the future.");
+                dateTime = value;
+            }
+        }
+
         // -------------------------------
         // Optional Attributes
         // -------------------------------
@@ -102,11 +118,12 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Payment class with mandatory and optional attributes.
         /// </summary>
-        public Payment(int paymentID, int orderID, double amount, string? transactionID = null)
+        public Payment(int paymentID, int orderID, double amount, DateTime dateTime, string? transactionID = null)
         {
             PaymentID = paymentID;
             OrderID = orderID;
             Amount = amount;
+            DateTime = dateTime;
             TransactionID = transactionID;
 
             // Add to class extent

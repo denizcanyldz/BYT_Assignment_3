@@ -20,7 +20,7 @@ namespace Tests.ModelsTests
             Assert.That(waiter.StaffID, Is.EqualTo(1));
             Assert.That(waiter.Name, Is.EqualTo("John Doe"));
             Assert.That(waiter.Section, Is.EqualTo("Section A"));
-            Assert.That(waiter.Shift, Is.EqualTo("Day Shift"));
+            Assert.That(waiter.ContactNumber, Is.EqualTo("Day Shift"));
             Assert.That(Waiter.TotalWaiters, Is.EqualTo(1));
         }
 
