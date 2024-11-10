@@ -186,5 +186,31 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Reservation() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Reservation.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Reservation other)
+            {
+                return ReservationID == other.ReservationID &&
+                       CustomerID == other.CustomerID &&
+                       ReservationDate == other.ReservationDate &&
+                       SpecialRequests == other.SpecialRequests &&
+                       Status == other.Status &&
+                       Table.Equals(other.Table);
+                // Excluding OrderItems collection to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ReservationID, CustomerID, ReservationDate, SpecialRequests, Status, Table);
+        }
     }
 }

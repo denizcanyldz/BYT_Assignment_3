@@ -82,5 +82,28 @@
         /// Parameterless constructor for serialization.
         /// </summary>
         public Waiter() : base() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Waiter.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Waiter other)
+            {
+                return StaffID == other.StaffID &&
+                       Name == other.Name &&
+                       ContactNumber == other.ContactNumber &&
+                       TipsCollected == other.TipsCollected;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(StaffID, Name, ContactNumber, TipsCollected);
+        }
     }
 }

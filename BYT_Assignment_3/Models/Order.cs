@@ -176,5 +176,30 @@ namespace BYT_Assignment_3.Models
         {
             return code.Length == 10 && System.Text.RegularExpressions.Regex.IsMatch(code, @"^[a-zA-Z0-9]+$");
         }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Order.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Order other)
+            {
+                return OrderID == other.OrderID &&
+                       OrderDate == other.OrderDate &&
+                       Notes == other.Notes &&
+                       DiscountCode == other.DiscountCode &&
+                       Table.Equals(other.Table);
+                // Excluding OrderItems collection to simplify equality
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(OrderID, OrderDate, Notes, DiscountCode, Table);
+        }
     }
 }

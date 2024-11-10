@@ -105,5 +105,27 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Manager() { }
+        
+        /// <summary>
+        /// Determines whether the specified object is equal to the current Manager.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is Manager other)
+            {
+                return ManagerID == other.ManagerID &&
+                       Name == other.Name &&
+                       Department == other.Department;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ManagerID, Name, Department);
+        }
     }
 }

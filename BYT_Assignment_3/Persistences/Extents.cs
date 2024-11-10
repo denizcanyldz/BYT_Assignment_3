@@ -1,8 +1,13 @@
+using System.Xml.Serialization;
 using BYT_Assignment_3.Models;
 
 namespace BYT_Assignment_3;
 
 [Serializable]
+[XmlInclude(typeof(Bartender))]
+[XmlInclude(typeof(Chef))]
+[XmlInclude(typeof(Waiter))]
+[XmlInclude(typeof(WaiterBartender))]
 public class Extents
 {
     public List<Customer> Customers { get; set; } = new List<Customer>();
