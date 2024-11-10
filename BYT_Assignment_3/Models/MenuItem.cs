@@ -67,22 +67,9 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        // -------------------------------
+       // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? description;
-
-        public string? Description
-        {
-            get => description;
-            set
-            {
-                if(!string.IsNullOrEmpty(value) && value.Length > 300)
-                    throw new ArgumentException("Description length cannot exceed 300 characters.");
-                description = value;
-            }
-        }
-
         private bool isAvailable;
 
         public bool IsAvailable
@@ -95,7 +82,7 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
-        // Additional Attribute
+        // Additional Attributes
         // -------------------------------
         private double basePrice;
 
@@ -113,13 +100,58 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        private int calories;
+
+        /// <summary>
+        /// Gets or sets the number of calories in the menu item.
+        /// </summary>
+        public int Calories
+        {
+            get => calories;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Calories cannot be negative.");
+                calories = value;
+            }
+        }
+
+        private double discountPrice;
+
+        /// <summary>
+        /// Gets or sets the discount price of the menu item.
+        /// </summary>
+        public double DiscountPrice
+        {
+            get => discountPrice;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("DiscountPrice cannot be negative.");
+                discountPrice = value;
+            }
+        }
+
+        private int preparationTime;
+
+        /// <summary>
+        /// Gets or sets the preparation time of the menu item in minutes.
+        /// </summary>
+        public int PreparationTime
+        {
+            get => preparationTime;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("PreparationTime cannot be negative.");
+                preparationTime = value;
+            }
+        }
+
         // -------------------------------
         // Derived Attributes
         // -------------------------------
-        [XmlIgnore] // Prevent serialization as it's derived
-        public double PriceAfterTax => Math.Round(basePrice * TaxPercentage, 2);
-
-        public int TotalIngredients => ingredients.Count;
+        public double TotalPriceAfterTax => Math.Round(BasePrice * TaxPercentage, 2);
 
         // -------------------------------
         // Multi-Value Attributes
@@ -155,12 +187,14 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the MenuItem class with mandatory and optional attributes.
         /// </summary>
-        public MenuItem(int menuItemID, string name, double basePrice, string? description = null, bool isAvailable = true)
+        public MenuItem(int menuItemID, string name, double basePrice, int calories, double discountPrice, int preparationTime, bool isAvailable = true)
         {
             MenuItemID = menuItemID;
             Name = name;
             BasePrice = basePrice;
-            Description = description;
+            Calories = calories;
+            DiscountPrice = discountPrice;
+            PreparationTime = preparationTime;
             IsAvailable = isAvailable;
 
             // Add to class extent

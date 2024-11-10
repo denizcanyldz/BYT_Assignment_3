@@ -15,8 +15,8 @@ namespace Tests.ModelsTests
         //derived class for testing becuase Staff is abstract
         private class TestStaff : Staff
         {
-            public TestStaff(int staffID, string name, string? shift = null)
-                : base(staffID, name, shift) { }
+            public TestStaff(int staffID, string name, string? contactNumber = null)
+                : base(staffID, name, contactNumber) { }
 
             public TestStaff() { } // parameterless constructor for serialization
         }
@@ -28,7 +28,7 @@ namespace Tests.ModelsTests
 
             Assert.That(staff.StaffID, Is.EqualTo(1));
             Assert.That(staff.Name, Is.EqualTo("John Doe"));
-            Assert.That(staff.Shift, Is.EqualTo("Morning"));
+            Assert.That(staff.ContactNumber, Is.EqualTo("Morning"));
             Assert.That(Staff.TotalStaff, Is.EqualTo(1));
         }
 

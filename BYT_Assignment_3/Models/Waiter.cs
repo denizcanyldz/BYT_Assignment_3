@@ -48,16 +48,17 @@
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? section;
+        private bool tipsCollected;
 
-        public string? Section
+        /// <summary>
+        /// Gets or sets whether tips have been collected.
+        /// </summary>
+        public bool TipsCollected
         {
-            get => section;
+            get => tipsCollected;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 100)
-                    throw new ArgumentException("Section length cannot exceed 100 characters.");
-                section = value;
+                tipsCollected = value;
             }
         }
 
@@ -67,10 +68,10 @@
         /// <summary>
         /// Initializes a new instance of the Waiter class with mandatory and optional attributes.
         /// </summary>
-        public Waiter(int staffID, string name, string? section = null, string? shift = null)
-            : base(staffID, name, shift)
+        public Waiter(int staffID, string name, bool tipsCollected = false, string? contactNumber = null)
+            : base(staffID, name, contactNumber)
         {
-            Section = section;
+            TipsCollected = tipsCollected;
 
             // Add to waiter extent
             waiters.Add(this);

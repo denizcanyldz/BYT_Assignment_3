@@ -93,6 +93,22 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        private Table table;
+
+        /// <summary>
+        /// Gets or sets the table associated with the order.
+        /// </summary>
+        public Table Table
+        {
+            get => table;
+            set
+            {
+                if (value == null)
+                    throw new ArgumentException("Table cannot be null.");
+                table = value;
+            }
+        }
+
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
@@ -124,19 +140,10 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Derived Attributes
         // -------------------------------
-        public double TotalPrice
-        {
-            get
-            {
-                double total = 0;
-                foreach(var item in orderItems)
-                {
-                    if(item != null)
-                        total += item.Price * item.Quantity;
-                }
-                return total;
-            }
-        }
+        /// <summary>
+        /// Gets the total amount of the order, calculated from all order items.
+        /// </summary>
+        public double TotalAmount => orderItems.Sum(item => item.TotalPrice);
 
         // -------------------------------
         // Constructors
@@ -144,10 +151,11 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Order class with mandatory and optional attributes.
         /// </summary>
-        public Order(int orderID, DateTime orderDate, string? notes = null, string? discountCode = null)
+        public Order(int orderID, DateTime orderDate, Table table, string? notes = null, string? discountCode = null)
         {
             OrderID = orderID;
             OrderDate = orderDate;
+            Table = table;
             Notes = notes;
             DiscountCode = discountCode;
 

@@ -93,6 +93,38 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        private string status;
+
+        /// <summary>
+        /// Gets or sets the status of the reservation.
+        /// </summary>
+        public string Status
+        {
+            get => status;
+            set
+            {
+                if(string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Status cannot be null or empty.");
+                status = value;
+            }
+        }
+
+        private Table table;
+
+        /// <summary>
+        /// Gets or sets the table associated with the reservation.
+        /// </summary>
+        public Table Table
+        {
+            get => table;
+            set
+            {
+                if (value == null)
+                    throw new ArgumentException("Table cannot be null.");
+                table = value;
+            }
+        }
+
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
@@ -124,19 +156,10 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Derived Attributes
         // -------------------------------
-        public int NumberOfGuests
-        {
-            get
-            {
-                int totalGuests = 0;
-                foreach(var item in orderItems)
-                {
-                    if(item != null)
-                        totalGuests += item.Quantity;
-                }
-                return totalGuests;
-            }
-        }
+        /// <summary>
+        /// Gets the total number of guests based on order items.
+        /// </summary>
+        public int NumberOfGuests => orderItems.Sum(item => item.Quantity);
 
         // -------------------------------
         // Constructors
@@ -144,17 +167,20 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Reservation class with mandatory and optional attributes.
         /// </summary>
-        public Reservation(int reservationID, int customerID, DateTime reservationDate, string? specialRequests = null)
+        public Reservation(int reservationID, int customerID, DateTime reservationDate, Table table, string status, string? specialRequests = null)
         {
             ReservationID = reservationID;
             CustomerID = customerID;
             ReservationDate = reservationDate;
+            Table = table;
+            Status = status;
             SpecialRequests = specialRequests;
 
             // Add to class extent
             reservations.Add(this);
             TotalReservations = reservations.Count;
         }
+
 
         /// <summary>
         /// Parameterless constructor for serialization.
