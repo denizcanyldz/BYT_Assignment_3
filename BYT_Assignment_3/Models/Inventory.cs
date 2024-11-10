@@ -50,6 +50,7 @@ namespace BYT_Assignment_3.Models
         // Mandatory Attributes (Simple)
         // -------------------------------
         public int InventoryID { get; private set; }
+        
 
         private DateTime lastRestockDate;
 
@@ -116,6 +117,9 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Inventory() { }
+        public Inventory()
+        {
+           
+        }
     }
 }
