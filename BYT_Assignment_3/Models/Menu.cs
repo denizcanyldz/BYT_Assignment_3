@@ -9,7 +9,7 @@ namespace BYT_Assignment_3.Models
         private static int totalMenus = 0;
         
         /// <summary>
-        /// Gets or sets the total number of WaiterBartenders.
+        /// Gets or sets the total number of menus.
         /// </summary>
         public static int TotalMenus
         {
@@ -17,7 +17,7 @@ namespace BYT_Assignment_3.Models
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("TotalWaiterBartenders cannot be negative.");
+                    throw new ArgumentException("TotalMenus cannot be negative.");
                 totalMenus = value;
             }
         }
@@ -29,7 +29,7 @@ namespace BYT_Assignment_3.Models
         
         
         /// <summary>
-        /// Gets a read-only list of all menu items.
+        /// Gets a read-only list of all menus.
         /// </summary>
         public static IReadOnlyList<Menu> GetAll()
         {
@@ -54,13 +54,6 @@ namespace BYT_Assignment_3.Models
         
         
         // -------------------------------
-        // Optional Attributes
-        // -------------------------------
-        
-        
-        
-        
-        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
@@ -68,7 +61,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         /// <param name="menuId">The unique identifier for the menu.</param>
         /// <param name="menuItems">The list of menu items that the menu contains.</param>
-        public  Menu(int menuId, List<MenuItem> menuItems)
+        public Menu(int menuId, List<MenuItem> menuItems)
         {
             MenuId = menuId;
             MenuItems = menuItems;
@@ -77,10 +70,17 @@ namespace BYT_Assignment_3.Models
             menus.Add(this);
             TotalMenus = menus.Count;
         }
-        
+
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Menu(){}
+        public Menu()
+        {
+            MenuItems = new List<MenuItem>();
+            
+            // Add to the menus extent and update total
+            menus.Add(this);
+            TotalMenus = menus.Count;
+        }
     }
 }
