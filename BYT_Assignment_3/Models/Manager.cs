@@ -53,7 +53,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int ManagerID { get; private set; }
+        public int ManagerID { get; set; }
 
         private string name;
 

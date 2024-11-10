@@ -49,7 +49,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int ReservationID { get; private set; }
+        public int ReservationID { get; set; }
 
         private int customerID;
 
