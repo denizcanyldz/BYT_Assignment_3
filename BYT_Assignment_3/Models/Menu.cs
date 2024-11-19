@@ -41,6 +41,8 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<Menu> loadedMenus)
         {
+            if(loadedMenus == null)
+                throw new ArgumentNullException(nameof(loadedMenus), "Loaded menus list cannot be null.");
             menus = loadedMenus ?? new List<Menu>();
             TotalMenus = menus.Count;
             Staff.TotalStaff = Staff.GetAll().Count;
@@ -49,8 +51,24 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int MenuId { get; set; }
-        public List<MenuItem> MenuItems { get; set; }
+        private int menuId;
+        public int MenuId{
+            get => menuId;
+            set {
+                if(value <= 0)
+                    throw new ArgumentException("MenuId must be greater that zero.");
+                menuId = value;
+            }
+        }
+        private List<MenuItem> menuItems;
+        public List<MenuItem> MenuItems{
+            get => menuItems;
+            set{
+                if(value == null || value.Count == 0)
+                    throw new ArgumentException("MenuItems cannot be null or empty.");
+                menuItems = value;
+            }
+        }
         
         
         // -------------------------------
