@@ -46,6 +46,9 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<Manager> loadedManagers)
         {
+            if(loadedManagers == null)
+                throw new ArgumentNullException(nameof(loadedManagers), "Loaded managers list cannot be null.");
+
             managers = loadedManagers ?? new List<Manager>();
             TotalManagers = managers.Count;
         }
@@ -53,7 +56,15 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int ManagerID { get; set; }
+        private int managerID;
+        public int ManagerID{
+            get => managerID;
+            set{
+                if(value <=0)
+                    throw new ArgumentException("ManagerID must be greater than zero.");
+                managerID = value;
+            }
+        }
 
         private string name;
 

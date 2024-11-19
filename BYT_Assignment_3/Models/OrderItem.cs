@@ -40,14 +40,26 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<OrderItem> loadedOrderItems)
         {
-            orderItems = loadedOrderItems ?? new List<OrderItem>();
+            if (loadedOrderItems == null)
+                throw new ArgumentNullException(nameof(loadedOrderItems), "Loaded order items list cannot be null.");
+            
+            orderItems = loadedOrderItems;
             TotalOrderItems = orderItems.Count;
         }
 
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int OrderItemID { get; set; }
+        
+        private int orderItemID;
+        public int OrderItemID{
+            get => orderItemID;
+            set{
+                if(value <0)
+                    throw new ArgumentException("OrderItemID must be greater that zero.");
+                orderItemID = value;
+            }
+        }
 
         private string itemName;
 

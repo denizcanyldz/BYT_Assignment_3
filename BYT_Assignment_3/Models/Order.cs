@@ -49,7 +49,16 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int OrderID { get; set; }
+        
+        private int orderID;
+        public int OrderID{
+            get => orderID;
+            set{
+                if(value <= 0)
+                    throw new ArgumentException("OrderID must be greater than zero.");
+                orderID = value;
+            }
+        }
 
         private DateTime orderDate;
 

@@ -38,16 +38,28 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Sets the entire payment list (used during deserialization).
         /// </summary>
-        public static void SetAll(List<Payment> loadedPayments)
+         public static void SetAll(List<Payment> loadedPayments)
         {
-            payments = loadedPayments ?? new List<Payment>();
+            if (loadedPayments == null)
+                throw new ArgumentNullException(nameof(loadedPayments), "Loaded payments list cannot be null.");
+            
+            payments = loadedPayments;
             TotalPayments = payments.Count;
         }
 
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int PaymentID { get; set; }
+        
+        private int paymentID;
+        public int PaymentID{
+            get=>paymentID;
+            set{
+                if (value <= 0)
+                    throw new ArgumentException("PaymentID must be greater than zero.");
+                paymentID = value;
+            }
+        }
 
         private int orderID;
 

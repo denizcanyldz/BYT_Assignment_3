@@ -52,7 +52,17 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int MenuItemID { get; set; }
+        
+
+        private int menuItemID;
+        public int MenuItemID{
+            get=> menuItemID;
+            set {
+                if(value <= 0)
+                    throw new ArgumentException("MenuItemId must be greater that zero.");
+                menuItemID = value;
+            }
+        }
 
         private string name;
 
