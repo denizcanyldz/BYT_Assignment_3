@@ -74,5 +74,12 @@ namespace Tests.ModelsTests
             var ex = Assert.Throws<ArgumentException>(() => PaymentMethod.TotalPaymentMethods = -1);
             Assert.That(ex.Message, Is.EqualTo("TotalPaymentMethods cannot be negative."));
         }
+
+        [Test]
+        public void MethodName_ShouldThrowException_WhenNull()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => new PaymentMethod(1, null));
+            Assert.That(ex.Message, Is.EqualTo("MethodName cannot be null or empty."));
+        }
     }
 }
