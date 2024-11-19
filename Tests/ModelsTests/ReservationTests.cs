@@ -88,5 +88,20 @@ namespace Tests.ModelsTests
             reservation.AddOrderItem(new OrderItem(4, "Pasta", 3, 10.0)); // Quantity 3
             Assert.That(reservation.NumberOfGuests, Is.EqualTo(5));
         }
+
+        [Test]
+        public void Status_ShouldThrowException_WhenNull()
+        {
+            var table = new Table(1, 4);
+            var ex = Assert.Throws<ArgumentException>(() => new Reservation(1, 2, DateTime.Now.AddDays(1), table, null));
+            Assert.That(ex.Message, Is.EqualTo("Status cannot be null or empty."));
+        }
+
+        [Test]
+        public void Table_ShouldThrowException_WhenNull()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => new Reservation(1, 2, DateTime.Now.AddDays(1), null, "Reserved"));
+            Assert.That(ex.Message, Is.EqualTo("Table cannot be null."));
+        }
     }
 }

@@ -59,7 +59,7 @@ namespace BYT_Assignment_3.Models
             set
             {
                 if (value <= 0)
-                    throw new ArgumentException("CustomerID must be positive.");
+                    throw new ArgumentException("Invalid customer ID");
                 customerID = value;
             }
         }

@@ -100,5 +100,12 @@ namespace Tests.ModelsTests
             Assert.Contains(staff1, (System.Collections.ICollection)allStaff);
             Assert.Contains(staff2, (System.Collections.ICollection)allStaff);
         }
+
+        [Test]
+        public void Name_ShouldThrowException_WhenNull()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => new Waiter(1, null));
+            Assert.That(ex.Message, Is.EqualTo("Name cannot be null or empty."));
+        }
     }
 }

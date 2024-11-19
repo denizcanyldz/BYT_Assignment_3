@@ -52,9 +52,40 @@ namespace BYT_Assignment_3.Models
         // Mandatory Attributes (Simple)
         // -------------------------------
         public int RestaurantId { get; set; }
-        public string Name { get; set; }
-        public string Address { get; set; }
-        public string ContactNumber { get; set; }
+
+        private string name;
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Name cannot be null or empty.");
+                name = value;
+            }
+        }
+        private string address;
+        public string Address
+        {
+            get => address;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Address cannot be null or empty.");
+                address = value;
+            }
+        }
+        private string contactNumber;
+        public string ContactNumber
+        {
+            get => contactNumber;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("ContactNumber cannot be null or empty.");
+                contactNumber = value;
+            }
+        }
         public List<Menu> Menus { get; set; }
 
         // -------------------------------
