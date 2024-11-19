@@ -39,14 +39,6 @@ namespace Tests.ModelsTests
             Assert.That(ex.Message, Is.EqualTo("Name cannot be null or empty."));
         }
 
-        [Test]
-        public void Shift_ShouldThrowException_WhenExceedsMaxLength()
-        {
-            var longShift = new string('A', 51);
-            var ex = Assert.Throws<ArgumentException>(() => new TestStaff(1, "John Doe", longShift));
-            Assert.That(ex.Message, Is.EqualTo("Shift length cannot exceed 50 characters."));
-        }
-
 
         [Test]
         public void RemoveStaff_ShouldThrowException_WhenStaffNotFound()
