@@ -1,39 +1,23 @@
+using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
-    [Serializable]
     public class Customer
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalCustomers = 0;
 
-        public override bool Equals(object obj)
-        {
-            if (obj is Customer other)
-            {
-                return CustomerID == other.CustomerID &&
-                       Name == other.Name &&
-                       Email == other.Email &&
-                       PhoneNumber == other.PhoneNumber;
-            }
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(CustomerID, Name, Email, PhoneNumber);
-        }
-
         /// <summary>
-        /// Gets or sets the total number of customers.
+        /// Gets the total number of customers.
         /// </summary>
         public static int TotalCustomers
         {
             get => totalCustomers;
-            set
+            private set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalCustomers cannot be negative.");
@@ -57,9 +41,14 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Sets the entire customer list (used during deserialization).
         /// </summary>
+        /// <param name="loadedCustomers">List of customers to load.</param>
         public static void SetAll(List<Customer> loadedCustomers)
         {
-            customers = loadedCustomers ?? new List<Customer>();
+            customers.Clear();
+            if (loadedCustomers != null)
+            {
+                customers.AddRange(loadedCustomers);
+            }
             TotalCustomers = customers.Count;
         }
 
@@ -69,7 +58,6 @@ namespace BYT_Assignment_3.Models
         public int CustomerID { get; set; }
 
         private string name;
-
         public string Name
         {
             get => name;
@@ -85,7 +73,6 @@ namespace BYT_Assignment_3.Models
         // Optional Attributes
         // -------------------------------
         private string? email;
-
         public string? Email
         {
             get => email;
@@ -97,14 +84,13 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        private string phoneNumber;
-
-        public string PhoneNumber
+        private string? phoneNumber; // Made nullable
+        public string? PhoneNumber
         {
             get => phoneNumber;
             set
             {
-                if (!IsValidPhoneNumber(value))
+                if (value != null && !IsValidPhoneNumber(value))
                     throw new ArgumentException("Invalid phone number format.");
                 phoneNumber = value;
             }
@@ -113,10 +99,8 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        private List<Reservation> reservations = new List<Reservation>();
-
         [XmlIgnore] // Prevent direct serialization of the collection
-        public IReadOnlyList<Reservation> Reservations => reservations.AsReadOnly();
+        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
 
         /// <summary>
         /// Adds a reservation to the customer's reservation list.
@@ -125,7 +109,7 @@ namespace BYT_Assignment_3.Models
         {
             if(reservation == null)
                 throw new ArgumentException("Reservation cannot be null.");
-            reservations.Add(reservation);
+            Reservations.Add(reservation);
         }
 
         /// <summary>
@@ -133,15 +117,16 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void RemoveReservation(Reservation reservation)
         {
-            if(reservation == null || !reservations.Contains(reservation))
+            if(reservation == null || !Reservations.Contains(reservation))
                 throw new ArgumentException("Reservation not found.");
-            reservations.Remove(reservation);
+            Reservations.Remove(reservation);
         }
 
         // -------------------------------
         // Derived Attributes
         // -------------------------------
-        public int TotalReservations => reservations.Count;
+        [XmlIgnore]
+        public int TotalReservations => Reservations.Count;
 
         // -------------------------------
         // Constructors
@@ -179,6 +164,26 @@ namespace BYT_Assignment_3.Models
         {
             // Simple phone number validation logic (e.g., length, numeric)
             return phone.Length >= 7 && phone.Length <= 15 && long.TryParse(phone, out _);
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
+        public override bool Equals(object obj)
+        {
+            if (obj is Customer other)
+            {
+                return CustomerID == other.CustomerID &&
+                       Name == other.Name &&
+                       Email == other.Email &&
+                       PhoneNumber == other.PhoneNumber;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(CustomerID, Name, Email, PhoneNumber);
         }
     }
 }

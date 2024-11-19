@@ -4,7 +4,7 @@ using BYT_Assignment_3.Models;
 
 namespace BYT_Assignment_3.Persistences
 {
-   public static class PersistencyManager
+  public static class PersistencyManager
     {
         private const string DefaultFilePath = "extents.xml"; // Compile-time constant
 
@@ -37,6 +37,7 @@ namespace BYT_Assignment_3.Persistences
                     Restaurants = new List<Restaurant>(Restaurant.GetAll()),
                     WaiterBartenders = new List<WaiterBartender>(WaiterBartender.GetAll()),
                 };
+                
 
                 Persistence.SaveAll(filePath, extents);
             }
@@ -74,10 +75,21 @@ namespace BYT_Assignment_3.Persistences
                 Menu.SetAll(extents.Menus);
                 Restaurant.SetAll(extents.Restaurants);
                 WaiterBartender.SetAll(extents.WaiterBartenders);
+
+                // Aggregate all staff members from derived classes
+                List<Staff> allStaff = new List<Staff>();
+                allStaff.AddRange(Bartender.GetAll());
+                allStaff.AddRange(Chef.GetAll());
+                allStaff.AddRange(Waiter.GetAll());
+                allStaff.AddRange(WaiterBartender.GetAll());
+
+                // Update the Staff class's extent
+                Staff.SetAll(allStaff);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading all data: {ex.Message}");
+                throw new InvalidOperationException("Failed to load all data.", ex);
             }
         }
     }
