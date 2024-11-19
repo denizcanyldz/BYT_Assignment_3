@@ -1,20 +1,24 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
     public class Feedback
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalFeedbacks = 0;
 
         /// <summary>
-        /// Gets or sets the total number of feedback entries.
+        /// Gets the total number of feedback entries.
         /// </summary>
         public static int TotalFeedbacks
         {
             get => totalFeedbacks;
-            set
+            private set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalFeedbacks cannot be negative.");
@@ -35,13 +39,64 @@ namespace BYT_Assignment_3.Models
             return feedbacks.AsReadOnly();
         }
 
+        private static void ValidateFeedback(Feedback feedback)
+        {
+            if (feedback.CustomerID <= 0)
+                throw new ArgumentException("CustomerID must be positive.");
+    
+            if (feedback.Rating < 1 || feedback.Rating > 5)
+                throw new ArgumentException("Rating must be between 1 and 5.");
+    
+            if (feedback.DateTime > DateTime.Now)
+                throw new ArgumentException("DateTime cannot be in the future.");
+    
+            if (feedback.Comments != null)
+            {
+                if (string.IsNullOrWhiteSpace(feedback.Comments))
+                    throw new ArgumentException("Comments cannot be empty or whitespace.");
+                if (feedback.Comments.Length > 500)
+                    throw new ArgumentException("Comments length cannot exceed 500 characters.");
+            }
+        }
+
         /// <summary>
         /// Sets the entire feedback list (used during deserialization).
         /// </summary>
         public static void SetAll(List<Feedback> loadedFeedbacks)
         {
             feedbacks = loadedFeedbacks ?? new List<Feedback>();
-            TotalFeedbacks = feedbacks.Count;
+            TotalFeedbacks = 0; 
+
+            foreach (var feedback in feedbacks.ToList()) // Use a copy to allow safe removal
+            {
+                try
+                {
+                    ValidateFeedback(feedback);
+                    TotalFeedbacks++;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding Feedback (FeedbackID: {feedback.FeedbackID}): {ex.Message}");
+                    feedbacks.Remove(feedback); // Remove invalid feedback
+                    // Alternatively, rethrow or handle as per application requirements
+                    throw;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the average rating from all feedback entries.
+        /// </summary>
+        public static double AverageRating
+        {
+            get
+            {
+                if (feedbacks.Count == 0)
+                    return 0.0; 
+
+                return feedbacks.Average(fb => fb.Rating);
+            }
         }
 
         // -------------------------------
@@ -91,22 +146,6 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        private double averageRating;
-
-        /// <summary>
-        /// Gets or sets the average rating of the feedback.
-        /// </summary>
-        public double AverageRating
-        {
-            get => averageRating;
-            set
-            {
-                if (value < 1 || value > 5)
-                    throw new ArgumentException("AverageRating must be between 1 and 5.");
-                averageRating = value;
-            }
-        }
-
         // -------------------------------
         // Optional Attributes
         // -------------------------------
@@ -117,11 +156,17 @@ namespace BYT_Assignment_3.Models
             get => comments;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 500)
-                    throw new ArgumentException("Comments length cannot exceed 500 characters.");
+                if (value != null)
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                        throw new ArgumentException("Comments cannot be empty or whitespace.");
+                    if (value.Length > 500)
+                        throw new ArgumentException("Comments length cannot exceed 500 characters.");
+                }
                 comments = value;
             }
         }
+
 
         // -------------------------------
         // Constructors
@@ -129,13 +174,12 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Feedback class with mandatory and optional attributes.
         /// </summary>
-        public Feedback(int feedbackID, int customerID, int rating, DateTime dateTime, double averageRating, string? comments = null)
+        public Feedback(int feedbackID, int customerID, int rating, DateTime dateTime, string? comments = null)
         {
             FeedbackID = feedbackID;
             CustomerID = customerID;
             Rating = rating;
             DateTime = dateTime;
-            AverageRating = averageRating;
             Comments = comments;
 
             // Add to class extent
@@ -147,7 +191,7 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Feedback() { }
-        
+
         /// <summary>
         /// Determines whether the specified object is equal to the current Feedback.
         /// </summary>
@@ -159,7 +203,6 @@ namespace BYT_Assignment_3.Models
                        CustomerID == other.CustomerID &&
                        Rating == other.Rating &&
                        DateTime == other.DateTime &&
-                       AverageRating == other.AverageRating &&
                        Comments == other.Comments;
             }
             return false;
@@ -170,7 +213,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(FeedbackID, CustomerID, Rating, DateTime, AverageRating, Comments);
+            return HashCode.Combine(FeedbackID, CustomerID, Rating, DateTime, Comments);
         }
     }
 }

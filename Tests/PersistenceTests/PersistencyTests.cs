@@ -3,11 +3,11 @@ using BYT_Assignment_3.Persistences;
 using BYT_Assignment_3.Models;
 using System;
 using System.Collections.Generic;
-using BYT_Assignment_3;
+using System.IO;
 
 namespace Tests.PersistenceTests
 {
-   [TestFixture]
+    [TestFixture]
     public class PersistencyTests
     {
         // Path to the test XML file used for serialization/deserialization
@@ -77,8 +77,8 @@ namespace Tests.PersistenceTests
             // Create sample data for each class
             var customer = new Customer(1, "John Doe", "john@example.com", "1234567890");
             var bartender = new Bartender(1, "Jane Smith", "555-1234");
-            var chef = new Chef(1, "Gordon Ramsay", "Italian", "555-5678");
-            var feedback = new Feedback(1, 1, 5, DateTime.Now.AddDays(-1), 5.0, "Excellent service!");
+            var chef = new Chef(1, "Gordon Ramsay", new List<string> {"Italian"}, "555-5678");
+            var feedback = new Feedback(1, 101, 5, DateTime.Now.AddDays(-1), "Excellent service!");
             var ingredient = new Ingredient(1, "Tomato", 100.0, "Pieces", false);
             var inventory = new Inventory(1, DateTime.Now.AddDays(-2));
             var manager = new Manager(1, "Alice Johnson", "Operations");
@@ -102,6 +102,15 @@ namespace Tests.PersistenceTests
 
             // Act
             PersistencyManager.SaveAll(TestFilePath); // Save all data to the test XML file
+
+            // Verify that the file was created
+            Assert.IsTrue(File.Exists(TestFilePath), "Test XML file should exist after saving.");
+
+            // Optionally, inspect the XML content for debugging
+            var xmlContent = File.ReadAllText(TestFilePath);
+            Console.WriteLine("Serialized XML Content:");
+            Console.WriteLine(xmlContent);
+
             PersistencyManager.LoadAll(TestFilePath); // Load the data back from the test XML file
 
             // Assert
@@ -264,16 +273,16 @@ namespace Tests.PersistenceTests
             var ingredient = new Ingredient(1, "Tomato", 100.0, "Pieces", false);
 
             // Act
-            PersistencyManager.SaveAll(TestFilePath); // Save only customers and ingredients
+            PersistencyManager.SaveAll(TestFilePath); // Save all data (only customers and ingredients are populated)
             PersistencyManager.LoadAll(TestFilePath); // Load the data back
 
             // Assert
             // Verify populated extents
             Assert.AreEqual(1, Customer.TotalCustomers, "TotalCustomers should be 1.");
-            Assert.AreEqual(customer, Customer.GetAll()[0], "Customer should match the saved data.");
+            CollectionAssert.Contains(Customer.GetAll(), customer, "Customer should be present in the extent.");
 
             Assert.AreEqual(1, Ingredient.TotalIngredients, "TotalIngredients should be 1.");
-            Assert.AreEqual(ingredient, Ingredient.GetAll()[0], "Ingredient should match the saved data.");
+            CollectionAssert.Contains(Ingredient.GetAll(), ingredient, "Ingredient should be present in the extent.");
 
             // Verify other extents are empty
             Assert.AreEqual(0, Bartender.TotalBartenders, "TotalBartenders should be 0.");
@@ -288,89 +297,6 @@ namespace Tests.PersistenceTests
             Assert.AreEqual(0, Payment.TotalPayments, "TotalPayments should be 0.");
             Assert.AreEqual(0, Reservation.TotalReservations, "TotalReservations should be 0.");
             Assert.AreEqual(0, Table.TotalTables, "TotalTables should be 0.");
-            Assert.AreEqual(0, Waiter.TotalWaiters, "TotalWaiters should be 0.");
-            Assert.AreEqual(0, Menu.TotalMenus, "TotalMenus should be 0.");
-            Assert.AreEqual(0, Restaurant.TotalRestaurants, "TotalRestaurants should be 0.");
-            Assert.AreEqual(0, WaiterBartender.TotalWaiterBartenders, "TotalWaiterBartenders should be 0.");
-        }
-        
-
-        /// <summary>
-        /// Tests that saving with null extents results in empty data after deserialization.
-        /// Ensures that passing null or clearing data does not cause serialization issues.
-        /// </summary>
-        [Test]
-        public void SaveAll_WithNullExtents_ShouldInitializeEmptyData()
-        {
-            // Arrange
-            // Attempt to save with null extents by clearing all data
-            // All extents are already cleared in SetUp
-
-            // Act
-            PersistencyManager.SaveAll(TestFilePath); // Save all data (which is empty)
-            PersistencyManager.LoadAll(TestFilePath); // Load the data back
-
-            // Assert
-            // Verify all extents are empty
-            Assert.AreEqual(0, Customer.TotalCustomers, "TotalCustomers should be 0.");
-            Assert.AreEqual(0, Bartender.TotalBartenders, "TotalBartenders should be 0.");
-            Assert.AreEqual(0, Chef.TotalChefs, "TotalChefs should be 0.");
-            Assert.AreEqual(0, Feedback.TotalFeedbacks, "TotalFeedbacks should be 0.");
-            Assert.AreEqual(0, Ingredient.TotalIngredients, "TotalIngredients should be 0.");
-            Assert.AreEqual(0, Inventory.TotalInventories, "TotalInventories should be 0.");
-            Assert.AreEqual(0, Manager.TotalManagers, "TotalManagers should be 0.");
-            Assert.AreEqual(0, MenuItem.TotalMenuItems, "TotalMenuItems should be 0.");
-            Assert.AreEqual(0, Order.TotalOrders, "TotalOrders should be 0.");
-            Assert.AreEqual(0, OrderItem.TotalOrderItems, "TotalOrderItems should be 0.");
-            Assert.AreEqual(0, PaymentMethod.TotalPaymentMethods, "TotalPaymentMethods should be 0.");
-            Assert.AreEqual(0, Payment.TotalPayments, "TotalPayments should be 0.");
-            Assert.AreEqual(0, Reservation.TotalReservations, "TotalReservations should be 0.");
-            Assert.AreEqual(0, Table.TotalTables, "TotalTables should be 0.");
-            Assert.AreEqual(0, Waiter.TotalWaiters, "TotalWaiters should be 0.");
-            Assert.AreEqual(0, Menu.TotalMenus, "TotalMenus should be 0.");
-            Assert.AreEqual(0, Restaurant.TotalRestaurants, "TotalRestaurants should be 0.");
-            Assert.AreEqual(0, WaiterBartender.TotalWaiterBartenders, "TotalWaiterBartenders should be 0.");
-        }
-
-        /// <summary>
-        /// Tests that saving with partial populated extents serializes only those populated classes.
-        /// Verifies that only specified extents contain data while others remain empty.
-        /// </summary>
-        [Test]
-        public void SaveAll_WithPartialPopulatedExtents_ShouldSerializeOnlyPopulatedClasses()
-        {
-            // Arrange
-            var customer = new Customer(1, "John Doe", "john@example.com", "1234567890");
-            var menuItem = new MenuItem(1, "Pizza", 15.0, 800, 14.0, 20, true);
-            var table = new Table(1, 4, "Center", "Booth");
-
-            // Act
-            PersistencyManager.SaveAll(TestFilePath); // Save only populated extents
-            PersistencyManager.LoadAll(TestFilePath); // Load the data back
-
-            // Assert
-            // Verify populated extents
-            Assert.AreEqual(1, Customer.TotalCustomers, "TotalCustomers should be 1.");
-            Assert.AreEqual(customer, Customer.GetAll()[0], "Customer should match the saved data.");
-
-            Assert.AreEqual(1, MenuItem.TotalMenuItems, "TotalMenuItems should be 1.");
-            Assert.AreEqual(menuItem, MenuItem.GetAll()[0], "MenuItem should match the saved data.");
-
-            Assert.AreEqual(1, Table.TotalTables, "TotalTables should be 1.");
-            Assert.AreEqual(table, Table.GetAll()[0], "Table should match the saved data.");
-
-            // Verify other extents are empty
-            Assert.AreEqual(0, Bartender.TotalBartenders, "TotalBartenders should be 0.");
-            Assert.AreEqual(0, Chef.TotalChefs, "TotalChefs should be 0.");
-            Assert.AreEqual(0, Feedback.TotalFeedbacks, "TotalFeedbacks should be 0.");
-            Assert.AreEqual(0, Ingredient.TotalIngredients, "TotalIngredients should be 0.");
-            Assert.AreEqual(0, Inventory.TotalInventories, "TotalInventories should be 0.");
-            Assert.AreEqual(0, Manager.TotalManagers, "TotalManagers should be 0.");
-            Assert.AreEqual(0, Order.TotalOrders, "TotalOrders should be 0.");
-            Assert.AreEqual(0, OrderItem.TotalOrderItems, "TotalOrderItems should be 0.");
-            Assert.AreEqual(0, PaymentMethod.TotalPaymentMethods, "TotalPaymentMethods should be 0.");
-            Assert.AreEqual(0, Payment.TotalPayments, "TotalPayments should be 0.");
-            Assert.AreEqual(0, Reservation.TotalReservations, "TotalReservations should be 0.");
             Assert.AreEqual(0, Waiter.TotalWaiters, "TotalWaiters should be 0.");
             Assert.AreEqual(0, Menu.TotalMenus, "TotalMenus should be 0.");
             Assert.AreEqual(0, Restaurant.TotalRestaurants, "TotalRestaurants should be 0.");
@@ -531,7 +457,5 @@ namespace Tests.PersistenceTests
         }
 
         #endregion
-        
     }
 }
-

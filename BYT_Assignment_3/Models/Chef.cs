@@ -1,27 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
-    [Serializable]
     public class Chef : Staff
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalChefs = 0;
 
         /// <summary>
-        /// Gets or sets the total number of chefs.
+        /// Gets the total number of chefs.
         /// </summary>
         public static int TotalChefs
         {
             get => totalChefs;
-            set
+            private set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalChefs cannot be negative.");
@@ -44,28 +40,85 @@ namespace BYT_Assignment_3.Models
 
         /// <summary>
         /// Sets the entire chef list (used during deserialization).
+        /// Validates each chef's specialties before adding.
         /// </summary>
+        /// <param name="loadedChefs">List of chefs to load.</param>
         public static void SetAll(List<Chef> loadedChefs)
         {
-            chefs = loadedChefs ?? new List<Chef>();
+            chefs.Clear();
+
+            foreach (var chef in loadedChefs)
+            {
+                try
+                {
+                    Console.WriteLine($"Processing Chef: {chef.Name} (StaffID: {chef.StaffID})");
+
+                    // Validate each specialty in the chef's specialties list
+                    if (chef.Specialties == null)
+                        throw new ArgumentNullException(nameof(chef.Specialties), "Specialties cannot be null.");
+
+                    foreach (var specialty in chef.Specialties)
+                    {
+                        if (specialty == null)
+                        {
+                            Console.WriteLine("Encountered a null specialty.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Specialty: '{specialty}'");
+                        }
+
+                        if (string.IsNullOrWhiteSpace(specialty))
+                            throw new ArgumentException("Specialty cannot be null or empty.");
+                        if (specialty.Length > 100)
+                            throw new ArgumentException("Specialty length cannot exceed 100 characters.");
+                    }
+
+                    // Add to chefs list
+                    chefs.Add(chef);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding Chef (StaffID: {chef.StaffID}): {ex.Message}");
+                    throw;
+                }
+            }
+
             TotalChefs = chefs.Count;
             Staff.TotalStaff = Staff.GetAll().Count;
         }
 
         // -------------------------------
-        // Optional Attributes
+        // Multi-Value Attributes
         // -------------------------------
-        private string? specialty;
+        [XmlArray("Specialties")]
+        [XmlArrayItem("Specialty", IsNullable = true)]
+        public List<string?> Specialties { get; set; } = new List<string?>();
 
-        public string? Specialty
+        /// <summary>
+        /// Adds a specialty to the chef's specialties list.
+        /// </summary>
+        /// <param name="specialty">The specialty to add.</param>
+        public void AddSpecialty(string specialty)
         {
-            get => specialty;
-            set
-            {
-                if(!string.IsNullOrEmpty(value) && value.Length > 100)
-                    throw new ArgumentException("Specialty length cannot exceed 100 characters.");
-                specialty = value;
-            }
+            if (string.IsNullOrWhiteSpace(specialty))
+                throw new ArgumentException("Specialty cannot be null or empty.");
+            if (specialty.Length > 100)
+                throw new ArgumentException("Specialty length cannot exceed 100 characters.");
+            Specialties.Add(specialty);
+        }
+
+        /// <summary>
+        /// Removes a specialty from the chef's specialties list.
+        /// </summary>
+        /// <param name="specialty">The specialty to remove.</param>
+        public void RemoveSpecialty(string specialty)
+        {
+            if (string.IsNullOrWhiteSpace(specialty))
+                throw new ArgumentException("Specialty cannot be null or empty.");
+            if (!Specialties.Contains(specialty))
+                throw new ArgumentException("Specialty not found.");
+            Specialties.Remove(specialty);
         }
 
         // -------------------------------
@@ -74,10 +127,20 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Chef class with mandatory and optional attributes.
         /// </summary>
-        public Chef(int staffID, string name, string? specialty = null, string? contactNumber = null)
+        /// <param name="staffID">The staff ID.</param>
+        /// <param name="name">The name of the chef.</param>
+        /// <param name="specialties">A list of specialties.</param>
+        /// <param name="contactNumber">The contact number.</param>
+        public Chef(int staffID, string name, List<string?>? specialties = null, string? contactNumber = null)
             : base(staffID, name, contactNumber)
         {
-            Specialty = specialty;
+            if (specialties != null)
+            {
+                foreach (var specialty in specialties)
+                {
+                    AddSpecialty(specialty!); // The '!' operator is safe here because validation is done in AddSpecialty
+                }
+            }
 
             // Add to chef extent
             chefs.Add(this);
@@ -87,29 +150,45 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Chef() : base() { }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Chef.
-        /// </summary>
+        public Chef() : base()
+        {
+            Specialties = new List<string?>();
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Chef other)
             {
-                return StaffID == other.StaffID &&
-                       Name == other.Name &&
-                       ContactNumber == other.ContactNumber &&
-                       Specialty == other.Specialty;
+                if (StaffID != other.StaffID ||
+                    Name != other.Name ||
+                    ContactNumber != other.ContactNumber)
+                    return false;
+
+                if (Specialties.Count != other.Specialties.Count)
+                    return false;
+
+                for (int i = 0; i < Specialties.Count; i++)
+                {
+                    if (Specialties[i] != other.Specialties[i])
+                        return false;
+                }
+
+                return true;
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(StaffID, Name, ContactNumber, Specialty);
+            int hash = HashCode.Combine(StaffID, Name, ContactNumber);
+            foreach (var specialty in Specialties)
+            {
+                hash = HashCode.Combine(hash, specialty);
+            }
+            return hash;
         }
     }
 }

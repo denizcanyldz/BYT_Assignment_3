@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -6,23 +9,25 @@ namespace BYT_Assignment_3.Models
     public class Inventory
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalInventories = 0;
 
         /// <summary>
-        /// Gets or sets the total number of inventories.
+        /// Gets the total number of inventories.
         /// </summary>
         public static int TotalInventories
         {
             get => totalInventories;
-            set
+            private set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalInventories cannot be negative.");
                 totalInventories = value;
             }
         }
+
+        private static readonly object inventoryLock = new object();
 
         // -------------------------------
         // Class Extent
@@ -34,30 +39,66 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static IReadOnlyList<Inventory> GetAll()
         {
-            return inventories.AsReadOnly();
+            lock (inventoryLock)
+            {
+                return inventories.AsReadOnly();
+            }
         }
 
         /// <summary>
         /// Sets the entire inventory list (used during deserialization).
+        /// Validates each inventory entry before adding.
         /// </summary>
+        /// <param name="loadedInventories">List of inventories to load.</param>
         public static void SetAll(List<Inventory> loadedInventories)
         {
-            inventories = loadedInventories ?? new List<Inventory>();
-            TotalInventories = inventories.Count;
+            lock (inventoryLock)
+            {
+                inventories = loadedInventories ?? new List<Inventory>();
+                TotalInventories = 0; // Reset count before re-adding validated inventories
+
+                foreach (var inventory in inventories.ToList()) // Use a copy to allow safe removal
+                {
+                    try
+                    {
+                        Console.WriteLine($"Processing Inventory: ID {inventory.InventoryID}");
+                        ValidateInventory(inventory);
+                        TotalInventories++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error adding Inventory (ID: {inventory.InventoryID}): {ex.Message}");
+                        inventories.Remove(inventory); // Remove invalid inventory
+                        throw;
+                    }
+                }
+            }
         }
 
         // -------------------------------
-        // Mandatory Attributes (Simple)
+        // Mandatory Attributes
         // -------------------------------
-        public int InventoryID { get; set; }
-        
+        private int inventoryID;
+
+        [XmlElement("InventoryID")]
+        public int InventoryID
+        {
+            get => inventoryID;
+            private set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("InventoryID must be positive.");
+                inventoryID = value;
+            }
+        }
 
         private DateTime lastRestockDate;
 
+        [XmlElement("LastRestockDate")]
         public DateTime LastRestockDate
         {
             get => lastRestockDate;
-            set
+            private set
             {
                 if (value > DateTime.Now)
                     throw new ArgumentException("LastRestockDate cannot be in the future.");
@@ -68,34 +109,65 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        private List<Ingredient> ingredients = new List<Ingredient>();
+        private readonly List<Ingredient> ingredients = new List<Ingredient>();
 
-        [XmlIgnore] // Prevent direct serialization of the collection
-        public IReadOnlyList<Ingredient> Ingredients => ingredients.AsReadOnly();
+        [XmlArray("Ingredients")]
+        [XmlArrayItem("Ingredient")]
+        public List<Ingredient> Ingredients
+        {
+            get => ingredients;
+            private set
+            {
+                if (value == null)
+                    throw new ArgumentException("Ingredients list cannot be null.");
+                ingredients.Clear();
+                foreach (var ingredient in value)
+                {
+                    AddIngredient(ingredient);
+                }
+            }
+        }
 
         /// <summary>
         /// Adds an ingredient to the inventory.
         /// </summary>
+        /// <param name="ingredient">The ingredient to add.</param>
         public void AddIngredient(Ingredient ingredient)
         {
-            if(ingredient == null)
-                throw new ArgumentException("Ingredient cannot be null.");
-            ingredients.Add(ingredient);
+            if (ingredient == null)
+                throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
+
+            if (!ingredients.Contains(ingredient))
+            {
+                ingredients.Add(ingredient);
+            }
+            else
+            {
+                throw new ArgumentException("Ingredient already exists in the inventory.");
+            }
         }
 
         /// <summary>
         /// Removes an ingredient from the inventory.
         /// </summary>
+        /// <param name="ingredient">The ingredient to remove.</param>
         public void RemoveIngredient(Ingredient ingredient)
         {
-            if(ingredient == null || !ingredients.Contains(ingredient))
-                throw new ArgumentException("Ingredient not found.");
-            ingredients.Remove(ingredient);
+            if (ingredient == null)
+                throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
+
+            if (!ingredients.Remove(ingredient))
+            {
+                throw new ArgumentException("Ingredient not found in the inventory.");
+            }
         }
 
         // -------------------------------
         // Derived Attributes
         // -------------------------------
+        /// <summary>
+        /// Gets the total number of items in the inventory.
+        /// </summary>
         public int TotalItems => ingredients.Count;
 
         // -------------------------------
@@ -106,42 +178,67 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public Inventory(int inventoryID, DateTime lastRestockDate)
         {
-            InventoryID = inventoryID;
+            InventoryID = inventoryID; // Setter includes validation
             LastRestockDate = lastRestockDate;
 
             // Add to class extent
-            inventories.Add(this);
-            TotalInventories = inventories.Count;
+            lock (inventoryLock)
+            {
+                if (inventories.Any(inv => inv.InventoryID == inventoryID))
+                    throw new ArgumentException($"An Inventory with ID {inventoryID} already exists.");
+
+                inventories.Add(this);
+                TotalInventories = inventories.Count;
+            }
         }
+
 
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
         public Inventory()
         {
-           
+            // Required for XML serialization
         }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Inventory.
-        /// </summary>
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Inventory other)
             {
                 return InventoryID == other.InventoryID &&
                        LastRestockDate == other.LastRestockDate;
-                // Excluding Ingredients collection to simplify equality
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(InventoryID, LastRestockDate);
+        }
+
+        // -------------------------------
+        // Private Validation Method
+        // -------------------------------
+        /// <summary>
+        /// Validates the properties of an Inventory instance.
+        /// </summary>
+        /// <param name="inventory">The Inventory instance to validate.</param>
+        private static void ValidateInventory(Inventory inventory)
+        {
+            if (inventory.InventoryID <= 0)
+                throw new ArgumentException("InventoryID must be positive.");
+
+            if (inventory.LastRestockDate > DateTime.Now)
+                throw new ArgumentException("LastRestockDate cannot be in the future.");
+
+            // Validate each Ingredient in the Ingredients list
+            foreach (var ingredient in inventory.ingredients)
+            {
+                Ingredient.ValidateIngredient(ingredient);
+            }
         }
     }
 }

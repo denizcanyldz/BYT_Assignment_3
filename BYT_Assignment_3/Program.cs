@@ -280,10 +280,39 @@ namespace BYT_Assignment_3
                 Console.WriteLine("----- Add New Chef -----");
                 int staffID = PromptForInt("Enter Staff ID: ");
                 string name = PromptForString("Enter Name: ");
-                string specialty = PromptForString("Enter Specialty: ");
-                string contactNumber = PromptForString("Enter Contact Number: ");
+ // Collect multiple specialties
+                var specialties = new List<string>();
+                Console.WriteLine("Enter Specialties (type 'done' when finished):");
+                while (true)
+                {
+                    string specialtyInput = PromptForString("Enter Specialty: ");
+                    if (specialtyInput.Equals("done", StringComparison.OrdinalIgnoreCase))
+                    {
+                        break;
+                    }
 
-                var chef = new Chef(staffID, name, specialty, contactNumber);
+                    try
+                    {
+                        // Attempt to add the specialty using the Chef class's validation
+                        // Temporarily create a Chef object to use the AddSpecialty method
+                        // Alternatively, implement a separate validation method
+                        var tempChef = new Chef(); // Using parameterless constructor
+                        tempChef.AddSpecialty(specialtyInput);
+                        specialties.Add(specialtyInput);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Console.WriteLine($"Invalid specialty: {ex.Message}");
+                    }
+                }
+
+                if (specialties.Count == 0)
+                {
+                    Console.WriteLine("At least one specialty is required to add a chef.");
+                    return;
+                }                string contactNumber = PromptForString("Enter Contact Number: ");
+
+                var chef = new Chef(staffID, name, specialties, contactNumber);
                 Console.WriteLine("Chef added successfully!");
             }
             catch (Exception ex)
@@ -308,7 +337,10 @@ namespace BYT_Assignment_3
             {
                 foreach (var chef in chefs)
                 {
-                    Console.WriteLine($"ID: {chef.StaffID}, Name: {chef.Name}, Specialty: {chef.Specialty}, Contact: {chef.ContactNumber}");
+                    string specialties = chef.Specialties.Count > 0
+                        ? string.Join(", ", chef.Specialties)
+                        : "None";
+                    Console.WriteLine($"ID: {chef.StaffID}, Name: {chef.Name}, Specialties: {specialties}, Contact: {chef.ContactNumber}");
                 }
             }
             PromptToContinue();

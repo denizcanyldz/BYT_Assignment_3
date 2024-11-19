@@ -109,8 +109,7 @@ namespace BYT_Assignment_3.Models
             if (obj is Menu other)
             {
                 return MenuId == other.MenuId &&
-                       // Excluding MenuItems collection to simplify equality
-                       // Alternatively, implement sequence equality if needed
+                       
                        true;
             }
             return false;

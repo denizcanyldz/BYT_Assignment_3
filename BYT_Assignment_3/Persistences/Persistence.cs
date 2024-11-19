@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Persistences
 {
-    public static class Persistence
+   internal static class Persistence 
     {
         private static readonly XmlSerializer serializer = new XmlSerializer(typeof(Extents));
 
