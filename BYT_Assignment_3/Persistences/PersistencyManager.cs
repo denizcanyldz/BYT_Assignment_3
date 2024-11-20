@@ -7,7 +7,7 @@ namespace BYT_Assignment_3.Persistences
   public static class PersistencyManager
     {
         private const string DefaultFilePath = "extents.xml"; // Compile-time constant
-
+        
         /// <summary>
         /// Saves all class extents to a specified XML file.
         /// </summary>
