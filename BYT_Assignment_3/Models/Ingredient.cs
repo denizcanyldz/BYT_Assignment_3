@@ -157,6 +157,41 @@ namespace BYT_Assignment_3.Models
                 isPerishable = value;
             }
         }
+        
+        // -------------------------------
+        // Multi-Value Attributes
+        // -------------------------------
+        private List<MenuItem> menuItems = new List<MenuItem>();
+
+        [XmlIgnore] // Prevent direct serialization of the collection
+        public IReadOnlyList<MenuItem> MenuItems => menuItems.AsReadOnly();
+
+        /// <summary>
+        /// Adds a menu item to the ingredient.
+        /// </summary>
+        internal void AddMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            if (!menuItems.Contains(menuItem))
+            {
+                menuItems.Add(menuItem);
+            }
+        }
+
+        /// <summary>
+        /// Removes a menu item from the ingredient.
+        /// </summary>
+        internal void RemoveMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            if (menuItems.Contains(menuItem))
+            {
+                menuItems.Remove(menuItem);
+            }
+        }
+
 
         // -------------------------------
         // Constructors

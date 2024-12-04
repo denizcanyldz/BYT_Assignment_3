@@ -176,9 +176,13 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void AddIngredient(Ingredient ingredient)
         {
-            if(ingredient == null)
-                throw new ArgumentException("Ingredient cannot be null.");
+            if (ingredient == null)
+                throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
+            if (ingredients.Contains(ingredient))
+                throw new ArgumentException("Ingredient already exists in the menu item.");
+
             ingredients.Add(ingredient);
+            ingredient.AddMenuItem(this); // Update reverse connection
         }
 
         /// <summary>
@@ -186,9 +190,13 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void RemoveIngredient(Ingredient ingredient)
         {
-            if(ingredient == null || !ingredients.Contains(ingredient))
-                throw new ArgumentException("Ingredient not found.");
+            if (ingredient == null)
+                throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
+            if (!ingredients.Contains(ingredient))
+                throw new ArgumentException("Ingredient not found in the menu item.");
+
             ingredients.Remove(ingredient);
+            ingredient.RemoveMenuItem(this); // Update reverse connection
         }
 
         // -------------------------------
