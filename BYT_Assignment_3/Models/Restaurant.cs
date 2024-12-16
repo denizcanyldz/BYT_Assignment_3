@@ -145,6 +145,68 @@ namespace BYT_Assignment_3.Models
         }
         
         
+
+        // ---- Association: Restaurant -> Staff (1..*) ----
+    private List<Staff> staffList = new List<Staff>();
+
+    /// <summary>
+    /// Returns a read-only snapshot of the Staff that belong to this Restaurant.
+    /// We do NOT expose a public setter.
+    /// </summary>
+    public IReadOnlyList<Staff> GetStaff()
+    {
+        return staffList.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Adds a Staff member to this Restaurant and sets the reverse reference.
+    /// </summary>
+    public void AddStaff(Staff staff)
+    {
+        if (staff == null) 
+            throw new ArgumentException("Staff cannot be null.");
+
+        // Avoid duplicates (and infinite recursion)
+        if (!staffList.Contains(staff))
+        {
+            staffList.Add(staff);
+            // Set the Restaurant reference in the Staff class (reverse link)
+            staff.SetRestaurant(this);
+        }
+    }
+
+    /// <summary>
+    /// Removes a Staff member from this Restaurant and clears the reverse reference.
+    /// </summary>
+    public void RemoveStaff(Staff staff)
+    {
+        if (staff == null) 
+            throw new ArgumentException("Staff cannot be null.");
+
+        if (staffList.Contains(staff))
+        {
+            staffList.Remove(staff);
+            // Clear the Restaurant reference in the Staff class (reverse link)
+            staff.SetRestaurant(null);
+        }
+    }
+
+    /// <summary>
+    /// Updates (replaces) a Staff object with another Staff object. 
+    /// This ensures the old one is removed and the new one is added, 
+    /// preserving reverse references.
+    /// </summary>
+    public void UpdateStaff(Staff oldStaff, Staff newStaff)
+    {
+        if (oldStaff == null || newStaff == null)
+            throw new ArgumentException("Staff objects cannot be null.");
+
+        // Remove old staff from this Restaurant
+        RemoveStaff(oldStaff);
+
+        // Add new staff to this Restaurant
+        AddStaff(newStaff);
+    }
         /// <summary>
         /// Initializes a new instance of the Restaurant class with mandatory and optional attributes.
         /// </summary>

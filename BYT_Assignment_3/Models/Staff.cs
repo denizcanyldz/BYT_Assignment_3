@@ -106,6 +106,39 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        // ---- Association: Staff -> Restaurant ----
+    private Restaurant? restaurant;  // null if not currently employed
+
+    /// <summary>
+    /// Read-only property to see which Restaurant this Staff belongs to.
+    /// </summary>
+    public Restaurant? Restaurant => restaurant;
+
+    /// <summary>
+    /// Internal method to set the Restaurant reference. 
+    /// We keep it internal or private so only our code can call it.
+    /// </summary>
+    internal void SetRestaurant(Restaurant? newRestaurant)
+    {
+        // Prevent infinite recursion:
+        if (restaurant == newRestaurant) return;
+
+        // If this Staff was previously employed by some other Restaurant, remove it there.
+        if (restaurant != null)
+        {
+            restaurant.RemoveStaff(this);
+        }
+
+        // Assign the new restaurant
+        restaurant = newRestaurant;
+
+        // If newRestaurant is not null, ensure the reverse reference is also created
+        if (restaurant != null && !restaurant.GetStaff().Contains(this))
+        {
+            restaurant.AddStaff(this);
+        }
+    }
+
         // -------------------------------
         // Constructors
         // -------------------------------
