@@ -84,7 +84,7 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        private string? phoneNumber; // Made nullable
+        private string? phoneNumber; 
         public string? PhoneNumber
         {
             get => phoneNumber;
@@ -99,34 +99,71 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
+        // One-to-many relationship: One Customer -> Many Reservations
         [XmlIgnore] // Prevent direct serialization of the collection
-        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        private List<Reservation> reservations = new List<Reservation>();
+
+        public IReadOnlyList<Reservation> GetReservations() => reservations.AsReadOnly();
 
         /// <summary>
-        /// Adds a reservation to the customer's reservation list.
+        /// Adds a reservation for this customer. This automatically sets
+        /// the reservation's Customer property.
         /// </summary>
         public void AddReservation(Reservation reservation)
         {
             if(reservation == null)
                 throw new ArgumentException("Reservation cannot be null.");
-            Reservations.Add(reservation);
+
+            if (!reservations.Contains(reservation))
+            {
+                reservations.Add(reservation);
+                if (reservation.Customer != this)
+                {
+                    reservation.SetCustomer(this);
+                }
+            }
         }
 
+
         /// <summary>
-        /// Removes a reservation from the customer's reservation list.
+        /// Removes a reservation from this customer's list.
+        /// Automatically unsets the reservation's customer reference.
         /// </summary>
         public void RemoveReservation(Reservation reservation)
         {
-            if(reservation == null || !Reservations.Contains(reservation))
+            if(reservation == null || !reservations.Contains(reservation))
                 throw new ArgumentException("Reservation not found.");
-            Reservations.Remove(reservation);
+
+            reservations.Remove(reservation);
+            if (reservation.Customer == this)
+            {
+                reservation.RemoveCustomer();
+            }
+        }
+        /// <summary>
+        /// Updates a reservation to a new customer (reassigning the reservation).
+        /// Ensures removal from old customer and addition to the new one.
+        /// </summary>
+        public void UpdateReservationCustomer(Reservation reservation, Customer newCustomer)
+        {
+            if (reservation == null)
+                throw new ArgumentException("Reservation cannot be null.");
+
+            if (reservations.Contains(reservation))
+            {
+                // Remove from current customer
+                RemoveReservation(reservation);
+
+                // Add to the new customer
+                newCustomer?.AddReservation(reservation);
+            }
         }
 
         // -------------------------------
         // Derived Attributes
         // -------------------------------
         [XmlIgnore]
-        public int TotalReservations => Reservations.Count;
+        public int TotalReservations => reservations.Count;
 
         // -------------------------------
         // Constructors
@@ -134,7 +171,7 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Customer class with mandatory and optional attributes.
         /// </summary>
-        public Customer(int customerID, string name, string? email = null, string? phoneNumber = null)
+        public Customer(int customerID, string  name, string? email = null, string? phoneNumber = null)
         {
             CustomerID = customerID;
             Name = name;

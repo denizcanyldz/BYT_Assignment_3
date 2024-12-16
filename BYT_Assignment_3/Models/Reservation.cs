@@ -51,16 +51,15 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         public int ReservationID { get; set; }
 
-        private int customerID;
-
-        public int CustomerID
+        private Customer customer;
+        public Customer Customer
         {
-            get => customerID;
-            set
+            get => customer;
+            private set
             {
-                if (value <= 0)
-                    throw new ArgumentException("Invalid customer ID");
-                customerID = value;
+                if (value == null)
+                    throw new ArgumentException("Customer cannot be null.");
+                customer = value;
             }
         }
 
@@ -167,10 +166,10 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Reservation class with mandatory and optional attributes.
         /// </summary>
-        public Reservation(int reservationID, int customerID, DateTime reservationDate, Table table, string status, string? specialRequests = null)
+        public Reservation(int reservationID, Customer customer, DateTime reservationDate, Table table, string status, string? specialRequests = null)
         {
             ReservationID = reservationID;
-            CustomerID = customerID;
+            SetCustomer(customer);
             ReservationDate = reservationDate;
             Table = table;
             Status = status;
@@ -186,31 +185,69 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Reservation() { }
+
+        /// <summary>
+        /// Set the Customer for this Reservation.
+        /// </summary>
+        public void SetCustomer(Customer newCustomer)
+        {
+            if (newCustomer == null)
+                throw new ArgumentException("Customer cannot be null.");
+
+            // If there's an existing customer, remove this reservation from it first
+            if (customer != null && customer != newCustomer)
+            {
+                var oldCustomer = customer;
+                customer = null; 
+                oldCustomer.RemoveReservation(this);
+            }
+
+            customer = newCustomer;
+            if (!newCustomer.GetReservations().Contains(this))
+            {
+                newCustomer.AddReservation(this);
+            }
+        }
+
+        /// <summary>
+        /// Remove the Customer association from this Reservation.
+        /// Also updates the reverse relationship.
+        /// </summary>
+        public void RemoveCustomer()
+        {
+            if (customer != null)
+            {
+                var oldCustomer = customer;
+                customer = null;
+                if (oldCustomer.GetReservations().Contains(this))
+                {
+                    oldCustomer.RemoveReservation(this);
+                }
+            }
+        }
         
         /// <summary>
         /// Determines whether the specified object is equal to the current Reservation.
         /// </summary>
-        public override bool Equals(object obj)
+       public override bool Equals(object obj)
         {
             if (obj is Reservation other)
             {
                 return ReservationID == other.ReservationID &&
-                       CustomerID == other.CustomerID &&
+                       Customer == other.Customer &&
                        ReservationDate == other.ReservationDate &&
                        SpecialRequests == other.SpecialRequests &&
                        Status == other.Status &&
                        Table.Equals(other.Table);
-                // Excluding OrderItems collection to simplify equality
             }
             return false;
         }
-
         /// <summary>
         /// Serves as the default hash function.
         /// </summary>
-        public override int GetHashCode()
+       public override int GetHashCode()
         {
-            return HashCode.Combine(ReservationID, CustomerID, ReservationDate, SpecialRequests, Status, Table);
+            return HashCode.Combine(ReservationID, Customer, ReservationDate, SpecialRequests, Status, Table);
         }
     }
 }
