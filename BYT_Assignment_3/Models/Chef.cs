@@ -121,6 +121,63 @@ namespace BYT_Assignment_3.Models
             Specialties.Remove(specialty);
         }
 
+        // Association: A Chef can prepare multiple MenuItems (One-to-Many)
+        private readonly List<MenuItem> menuItems = new List<MenuItem>();
+
+        /// <summary>
+        /// Gets a read-only list of all MenuItems prepared by this Chef.
+        /// </summary>
+        public IReadOnlyList<MenuItem> MenuItems => menuItems.AsReadOnly();
+
+        /// <summary>
+        /// Adds a MenuItem to this Chef's list.
+        /// Ensures reverse association.
+        /// </summary>
+        public void AddMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+
+            if (menuItems.Contains(menuItem))
+                return; // Avoid duplicates
+
+            menuItems.Add(menuItem);
+            menuItem.AddChef(this); // Reverse reference
+        }
+
+        /// <summary>
+        /// Removes a MenuItem from this Chef's list.
+        /// Updates reverse association.
+        /// </summary>
+        public void RemoveMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+
+            if (!menuItems.Contains(menuItem))
+                return;
+
+            menuItems.Remove(menuItem);
+            if (menuItem.Chef == this)
+            {
+                menuItem.RemoveChef(); // Reverse reference
+            }
+        }
+
+        /// <summary>
+        /// Modifies the Chef association for a MenuItem.
+        /// </summary>
+        public void ModifyMenuItem(MenuItem menuItem, Chef newChef)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            if (newChef == null)
+                throw new ArgumentNullException(nameof(newChef), "New Chef cannot be null.");
+
+            RemoveMenuItem(menuItem); // Remove from current Chef
+            newChef.AddMenuItem(menuItem); // Add to new Chef
+        }
+
         // -------------------------------
         // Constructors
         // -------------------------------

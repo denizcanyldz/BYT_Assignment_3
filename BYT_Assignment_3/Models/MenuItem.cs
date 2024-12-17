@@ -52,13 +52,15 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        
+
 
         private int menuItemID;
-        public int MenuItemID{
-            get=> menuItemID;
-            set {
-                if(value <= 0)
+        public int MenuItemID
+        {
+            get => menuItemID;
+            set
+            {
+                if (value <= 0)
                     throw new ArgumentException("MenuItemId must be greater that zero.");
                 menuItemID = value;
             }
@@ -71,13 +73,13 @@ namespace BYT_Assignment_3.Models
             get => name;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Name cannot be null or empty.");
                 name = value;
             }
         }
 
-       // -------------------------------
+        // -------------------------------
         // Optional Attributes
         // -------------------------------
         private bool isAvailable;
@@ -104,7 +106,7 @@ namespace BYT_Assignment_3.Models
             get => basePrice;
             set
             {
-                if(value < 0)
+                if (value < 0)
                     throw new ArgumentException("BasePrice cannot be negative.");
                 basePrice = value;
             }
@@ -198,6 +200,57 @@ namespace BYT_Assignment_3.Models
             ingredients.Remove(ingredient);
             ingredient.RemoveMenuItem(this); // Update reverse connection
         }
+        // Association: One Chef can prepare multiple MenuItems
+        private Chef chef;
+
+        public Chef Chef
+        {
+            get => chef;
+        }
+
+        /// <summary>
+        /// Adds or sets the Chef who prepares this MenuItem.
+        /// Ensures reverse association.
+        /// </summary>
+        public void AddChef(Chef newChef)
+        {
+            if (newChef == null)
+                throw new ArgumentNullException(nameof(newChef), "Chef cannot be null.");
+
+            if (chef == newChef)
+                return;
+
+            // Remove from old Chef 
+            RemoveChef();
+
+            chef = newChef;
+            chef.AddMenuItem(this); // Reverse reference
+        }
+
+        /// <summary>
+        /// Removes the associated Chef from this MenuItem.
+        /// Updates reverse reference.
+        /// </summary>
+        public void RemoveChef()
+        {
+            if (chef != null)
+            {
+                var oldChef = chef;
+                chef = null;
+                if (oldChef.MenuItems.Contains(this))
+                {
+                    oldChef.RemoveMenuItem(this); // Reverse reference
+                }
+            }
+        }
+
+        /// <summary>
+        /// Modifies the Chef associated with this MenuItem.
+        /// </summary>
+        public void ModifyChef(Chef newChef)
+        {
+            AddChef(newChef); // Ensures reverse connection logic
+        }
 
         // -------------------------------
         // Constructors
@@ -224,7 +277,7 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public MenuItem() { }
-        
+
         /// <summary>
         /// Determines whether the specified object is equal to the current MenuItem.
         /// </summary>
