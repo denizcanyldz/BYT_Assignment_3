@@ -198,6 +198,51 @@ namespace BYT_Assignment_3.Models
             ingredients.Remove(ingredient);
             ingredient.RemoveMenuItem(this); // Update reverse connection
         }
+        
+        /// <summary>
+        /// Updates an existing ingredient with a new ingredient in the menu item.
+        /// </summary>
+        /// <param name="existingIngredient">The ingredient to be replaced.</param>
+        /// <param name="newIngredient">The new ingredient to replace with.</param>
+        public void UpdateIngredient(Ingredient existingIngredient, Ingredient newIngredient)
+        {
+            if (existingIngredient == null)
+                throw new ArgumentNullException(nameof(existingIngredient), "Existing ingredient cannot be null.");
+            if (newIngredient == null)
+                throw new ArgumentNullException(nameof(newIngredient), "New ingredient cannot be null.");
+            if (!ingredients.Contains(existingIngredient))
+                throw new ArgumentException("Existing ingredient not found in the menu item.");
+            if (ingredients.Contains(newIngredient))
+                throw new ArgumentException("New ingredient already exists in the menu item.");
+
+            // Remove the existing ingredient
+            RemoveIngredient(existingIngredient);
+
+            // Add the new ingredient
+            AddIngredient(newIngredient);
+        }
+        
+        /// <summary>
+        /// Sets the entire ingredients list, replacing any existing associations.
+        /// </summary>
+        /// <param name="newIngredients">The new list of ingredients.</param>
+        public void SetAllIngredients(List<Ingredient> newIngredients)
+        {
+            // Remove existing associations
+            foreach (var ingredient in new List<Ingredient>(ingredients))
+            {
+                RemoveIngredient(ingredient);
+            }
+
+            // Add new associations
+            if (newIngredients != null)
+            {
+                foreach (var ingredient in newIngredients)
+                {
+                    AddIngredient(ingredient);
+                }
+            }
+        }
 
         // -------------------------------
         // Constructors

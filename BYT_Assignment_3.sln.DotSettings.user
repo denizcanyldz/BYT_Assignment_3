@@ -22,6 +22,7 @@
     &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.ChefTests&lt;/TestId&gt;
     &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.IngredientTests&lt;/TestId&gt;
     &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.BartenderTests&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.AssociationTests.IngredientMenuItemAssociationTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ca5b7f8c_002D23f5_002D4112_002D9697_002D5095ffc767b3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PersistencyTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
