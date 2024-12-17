@@ -107,38 +107,125 @@ namespace BYT_Assignment_3.Models
         }
 
         // ---- Association: Staff -> Restaurant ----
-    private Restaurant? restaurant;  // null if not currently employed
+        private Restaurant? restaurant;  // null if not currently employed
 
-    /// <summary>
-    /// Read-only property to see which Restaurant this Staff belongs to.
-    /// </summary>
-    public Restaurant? Restaurant => restaurant;
+        /// <summary>
+        /// Read-only property to see which Restaurant this Staff belongs to.
+        /// </summary>
+        public Restaurant? Restaurant => restaurant;
 
-    /// <summary>
-    /// Internal method to set the Restaurant reference. 
-    /// We keep it internal or private so only our code can call it.
-    /// </summary>
-    internal void SetRestaurant(Restaurant? newRestaurant)
-    {
-        // Prevent infinite recursion:
-        if (restaurant == newRestaurant) return;
-
-        // If this Staff was previously employed by some other Restaurant, remove it there.
-        if (restaurant != null)
+        /// <summary>
+        /// Internal method to set the Restaurant reference. 
+        /// We keep it internal or private so only our code can call it.
+        /// </summary>
+        internal void SetRestaurant(Restaurant? newRestaurant)
         {
-            restaurant.RemoveStaff(this);
+            // Prevent infinite recursion:
+            if (restaurant == newRestaurant) return;
+
+            // If this Staff was previously employed by some other Restaurant, remove it there.
+            if (restaurant != null)
+            {
+                restaurant.RemoveStaff(this);
+            }
+
+            // Assign the new restaurant
+            restaurant = newRestaurant;
+
+            // If newRestaurant is not null, ensure the reverse reference is also created
+            if (restaurant != null && !restaurant.GetStaff().Contains(this))
+            {
+                restaurant.AddStaff(this);
+            }
+        }
+        // -------------------------------
+        // Reflexive Association Attributes
+        // -------------------------------
+        private Staff? supervisor; // A staff member can have at most one supervisor
+        private List<Staff> supervisees = new List<Staff>(); // A staff member can supervise many others
+
+        /// <summary>
+        /// Gets the supervisor of the staff.
+        /// </summary>
+        public Staff? Supervisor => supervisor;
+
+        /// <summary>
+        /// Gets a read-only list of supervisees.
+        /// </summary>
+        public IReadOnlyList<Staff> Supervisees => supervisees.AsReadOnly();
+
+        // -------------------------------
+        // Reflexive Association Methods
+        // -------------------------------
+
+        /// <summary>
+        /// Sets a supervisor for this staff member. Ensures no self-reference.
+        /// </summary>
+        public void SetSupervisor(Staff newSupervisor)
+        {
+            if (newSupervisor == null)
+                throw new ArgumentNullException(nameof(newSupervisor), "Supervisor cannot be null.");
+
+            if (newSupervisor == this)
+                throw new InvalidOperationException("A staff member cannot supervise themselves.");
+
+            // Remove existing supervisor reference
+            RemoveSupervisor();
+
+            // Set new supervisor
+            supervisor = newSupervisor;
+
+            // Add this staff member to the new supervisor's supervisees list
+            if (!newSupervisor.supervisees.Contains(this))
+            {
+                newSupervisor.supervisees.Add(this);
+            }
         }
 
-        // Assign the new restaurant
-        restaurant = newRestaurant;
-
-        // If newRestaurant is not null, ensure the reverse reference is also created
-        if (restaurant != null && !restaurant.GetStaff().Contains(this))
+        /// <summary>
+        /// Removes the current supervisor reference.
+        /// </summary>
+        public void RemoveSupervisor()
         {
-            restaurant.AddStaff(this);
+            if (supervisor != null)
+            {
+                supervisor.supervisees.Remove(this); // Remove from old supervisor's supervisees
+                supervisor = null; // Clear supervisor reference
+            }
         }
-    }
 
+        /// <summary>
+        /// Adds a supervisee to this staff member's supervisee list.
+        /// </summary>
+        public void AddSupervisee(Staff supervisee)
+        {
+            if (supervisee == null)
+                throw new ArgumentNullException(nameof(supervisee), "Supervisee cannot be null.");
+
+            if (supervisee == this)
+                throw new InvalidOperationException("A staff member cannot supervise themselves.");
+
+            if (!supervisees.Contains(supervisee))
+            {
+                supervisees.Add(supervisee);
+                supervisee.SetSupervisor(this); // Ensure reverse reference
+            }
+        }
+
+        /// <summary>
+        /// Removes a supervisee from this staff member's supervisee list.
+        /// </summary>
+        public void RemoveSupervisee(Staff supervisee)
+        {
+            if (supervisee == null)
+                throw new ArgumentNullException(nameof(supervisee), "Supervisee cannot be null.");
+
+            if (supervisees.Contains(supervisee))
+            {
+                supervisees.Remove(supervisee);
+                supervisee.RemoveSupervisor(); // Clear reverse reference
+            }
+        }
         // -------------------------------
         // Constructors
         // -------------------------------
