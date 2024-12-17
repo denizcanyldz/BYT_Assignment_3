@@ -7,7 +7,8 @@ namespace BYT_Assignment_3.Models
         // Class/Static Attributes
         // -------------------------------
         private static int totalMenus = 0;
-        
+
+
         /// <summary>
         /// Gets or sets the total number of menus.
         /// </summary>
@@ -21,13 +22,13 @@ namespace BYT_Assignment_3.Models
                 totalMenus = value;
             }
         }
-        
+
         // -------------------------------
         // Class Extent
         // -------------------------------
         private static List<Menu> menus = new List<Menu>();
-        
-        
+
+
         /// <summary>
         /// Gets a read-only list of all menus.
         /// </summary>
@@ -35,42 +36,80 @@ namespace BYT_Assignment_3.Models
         {
             return menus.AsReadOnly();
         }
-        
+
         /// <summary>
         /// Sets the entire menu list (used during deserialization).
         /// </summary>
         public static void SetAll(List<Menu> loadedMenus)
         {
-            if(loadedMenus == null)
+            if (loadedMenus == null)
                 throw new ArgumentNullException(nameof(loadedMenus), "Loaded menus list cannot be null.");
             menus = loadedMenus ?? new List<Menu>();
             TotalMenus = menus.Count;
             Staff.TotalStaff = Staff.GetAll().Count;
         }
-        
+
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
         private int menuId;
-        public int MenuId{
+        public int MenuId
+        {
             get => menuId;
-            set {
-                if(value <= 0)
+            set
+            {
+                if (value <= 0)
                     throw new ArgumentException("MenuId must be greater that zero.");
                 menuId = value;
             }
         }
+        // Aggregation Association: Menu -> MenuItems
         private List<MenuItem> menuItems;
-        public List<MenuItem> MenuItems{
+        public List<MenuItem> MenuItems
+        {
             get => menuItems;
-            set{
-                if(value == null || value.Count == 0)
+            set
+            {
+                if (value == null || value.Count == 0)
                     throw new ArgumentException("MenuItems cannot be null or empty.");
                 menuItems = value;
             }
         }
-        
-        
+
+        // Methods for Aggregation Association
+        public void AddMenuItem(MenuItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item), "MenuItem cannot be null.");
+            if (menuItems.Contains(item))
+                return;
+
+            menuItems.Add(item);
+            item.SetMenu(this); // Reverse reference
+        }
+
+        public void RemoveMenuItem(MenuItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item), "MenuItem cannot be null.");
+            if (!menuItems.Contains(item))
+                throw new ArgumentException("MenuItem not found in the Menu.");
+
+            menuItems.Remove(item);
+            if (item.Menu == this)
+    {
+        item.RemoveMenu();
+    }// Reverse reference
+        }
+
+        public void UpdateMenuItem(MenuItem oldItem, MenuItem newItem)
+        {
+            if (oldItem == null || newItem == null)
+                throw new ArgumentNullException("MenuItems cannot be null.");
+
+            RemoveMenuItem(oldItem);
+            AddMenuItem(newItem);
+        }
         // -------------------------------
         // Constructors
         // -------------------------------
@@ -83,7 +122,7 @@ namespace BYT_Assignment_3.Models
         {
             MenuId = menuId;
             MenuItems = menuItems;
-            
+
             // Add to the menus extent and update total
             menus.Add(this);
             TotalMenus = menus.Count;
@@ -95,12 +134,12 @@ namespace BYT_Assignment_3.Models
         public Menu()
         {
             MenuItems = new List<MenuItem>();
-            
+
             // Add to the menus extent and update total
             menus.Add(this);
             TotalMenus = menus.Count;
         }
-        
+
         /// <summary>
         /// Determines whether the specified object is equal to the current Menu.
         /// </summary>
@@ -109,7 +148,7 @@ namespace BYT_Assignment_3.Models
             if (obj is Menu other)
             {
                 return MenuId == other.MenuId &&
-                       
+
                        true;
             }
             return false;

@@ -252,6 +252,38 @@ namespace BYT_Assignment_3.Models
             AddChef(newChef); // Ensures reverse connection logic
         }
 
+        // Aggregation Association: Menu <- MenuItem
+        private Menu menu;
+
+        public Menu Menu => menu;
+
+        public void SetMenu(Menu newMenu)
+        {
+            if (menu == newMenu)
+                return;
+
+            menu?.RemoveMenuItem(this); // Remove from old Menu
+            menu = newMenu;
+
+            if (newMenu != null)
+                newMenu.AddMenuItem(this); // Add to new Menu
+        }
+
+        public void RemoveMenu()
+        {
+            if (menu != null)
+            {
+                var oldMenu = menu;
+                menu = null;
+
+                // Prevent redundant calls
+                if (oldMenu.MenuItems.Contains(this))
+                {
+                    oldMenu.MenuItems.Remove(this);
+                }
+            }
+        }
+
         // -------------------------------
         // Constructors
         // -------------------------------
