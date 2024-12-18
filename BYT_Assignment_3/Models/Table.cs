@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -74,7 +77,7 @@ namespace BYT_Assignment_3.Models
             get => location;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 100)
+                if (!string.IsNullOrEmpty(value) && value.Length > 100)
                     throw new ArgumentException("Location length cannot exceed 100 characters.");
                 location = value;
             }
@@ -87,7 +90,7 @@ namespace BYT_Assignment_3.Models
             get => seatingArrangement;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 50)
+                if (!string.IsNullOrEmpty(value) && value.Length > 50)
                     throw new ArgumentException("SeatingArrangement length cannot exceed 50 characters.");
                 seatingArrangement = value;
             }
@@ -106,7 +109,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void AddOrder(Order order)
         {
-            if(order == null)
+            if (order == null)
                 throw new ArgumentException("Order cannot be null.");
             orders.Add(order);
         }
@@ -116,7 +119,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void RemoveOrder(Order order)
         {
-            if(order == null || !orders.Contains(order))
+            if (order == null || !orders.Contains(order))
                 throw new ArgumentException("Order not found.");
             orders.Remove(order);
         }
@@ -133,11 +136,17 @@ namespace BYT_Assignment_3.Models
 
         /// <summary>
         /// Adds a Reservation to the Table.
+        /// Enforces unique ReservationDateTime per Table.
         /// </summary>
         public void AddReservation(Reservation reservation)
         {
             if (reservation == null)
-                throw new ArgumentNullException(nameof(reservation), "Reservation cannot be null.");
+                throw new ArgumentException("Reservation cannot be null.");
+
+            // **Enforce uniqueness of ReservationDateTime**
+            if (reservations.Any(r => r.ReservationDateTime == reservation.ReservationDateTime))
+                throw new ArgumentException($"A reservation already exists at {reservation.ReservationDateTime} for this table.");
+
             if (!reservations.Contains(reservation))
             {
                 reservations.Add(reservation);
@@ -146,7 +155,7 @@ namespace BYT_Assignment_3.Models
         }
 
         /// <summary>
-        /// Removes a Reservation from the Table.
+        /// Removes a Reservation from the Table's reservation list.
         /// </summary>
         public void RemoveReservation(Reservation reservation)
         {
@@ -158,6 +167,7 @@ namespace BYT_Assignment_3.Models
 
         /// <summary>
         /// Updates a Reservation in the Table.
+        /// Ensures that the new ReservationDateTime does not conflict.
         /// </summary>
         public void UpdateReservation(Reservation oldReservation, Reservation newReservation)
         {
@@ -168,12 +178,17 @@ namespace BYT_Assignment_3.Models
             if (reservations.Contains(newReservation))
                 throw new ArgumentException("New Reservation already exists in the Table.");
 
+            // **Check for ReservationDateTime conflict**
+            if (reservations.Any(r => r.ReservationDateTime == newReservation.ReservationDateTime && r != oldReservation))
+                throw new ArgumentException($"A reservation already exists at {newReservation.ReservationDateTime} for this table.");
+
             // Remove old reservation
             RemoveReservation(oldReservation);
 
             // Add new reservation
             AddReservation(newReservation);
         }
+
         // -------------------------------
         // Constructors
         // -------------------------------
@@ -196,7 +211,7 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Table() { }
-        
+
         /// <summary>
         /// Determines whether the specified object is equal to the current Table.
         /// </summary>
@@ -208,7 +223,7 @@ namespace BYT_Assignment_3.Models
                        MaxSeats == other.MaxSeats &&
                        Location == other.Location &&
                        SeatingArrangement == other.SeatingArrangement;
-                // Excluding Orders collection to simplify equality
+                // Excluding Orders and Reservations collections to simplify equality
             }
             return false;
         }

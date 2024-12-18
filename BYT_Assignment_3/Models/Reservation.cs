@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
+using System.Linq;
 
 namespace BYT_Assignment_3.Models
 {
@@ -51,29 +54,16 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         public int ReservationID { get; set; }
 
-        private int customerID;
+        private DateTime reservationDateTime;
 
-        public int CustomerID
+        public DateTime ReservationDateTime
         {
-            get => customerID;
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("Invalid customer ID");
-                customerID = value;
-            }
-        }
-
-        private DateTime reservationDate;
-
-        public DateTime ReservationDate
-        {
-            get => reservationDate;
+            get => reservationDateTime;
             set
             {
                 if (value < DateTime.Now)
-                    throw new ArgumentException("ReservationDate cannot be in the past.");
-                reservationDate = value;
+                    throw new ArgumentException("ReservationDateTime cannot be in the past.");
+                reservationDateTime = value;
             }
         }
 
@@ -87,7 +77,7 @@ namespace BYT_Assignment_3.Models
             get => specialRequests;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 300)
+                if (!string.IsNullOrEmpty(value) && value.Length > 300)
                     throw new ArgumentException("SpecialRequests length cannot exceed 300 characters.");
                 specialRequests = value;
             }
@@ -103,7 +93,7 @@ namespace BYT_Assignment_3.Models
             get => status;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Status cannot be null or empty.");
                 status = value;
             }
@@ -117,7 +107,7 @@ namespace BYT_Assignment_3.Models
         public Table Table
         {
             get => table;
-            set
+            private set
             {
                 if (value == null)
                     throw new ArgumentException("Table cannot be null.");
@@ -138,7 +128,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void AddOrderItem(OrderItem item)
         {
-            if(item == null)
+            if (item == null)
                 throw new ArgumentException("OrderItem cannot be null.");
             orderItems.Add(item);
         }
@@ -148,7 +138,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void RemoveOrderItem(OrderItem item)
         {
-            if(item == null || !orderItems.Contains(item))
+            if (item == null || !orderItems.Contains(item))
                 throw new ArgumentException("OrderItem not found.");
             orderItems.Remove(item);
         }
@@ -160,13 +150,14 @@ namespace BYT_Assignment_3.Models
         /// Gets the total number of guests based on order items.
         /// </summary>
         public int NumberOfGuests => orderItems.Sum(item => item.Quantity);
+
         private Customer customer;
 
         [XmlIgnore]
         public Customer Customer
         {
             get => customer;
-            set
+            private set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(Customer), "Customer cannot be null.");
@@ -203,17 +194,19 @@ namespace BYT_Assignment_3.Models
                 }
             }
         }
+
         // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
         /// Initializes a new instance of the Reservation class with mandatory and optional attributes.
         /// </summary>
-        public Reservation(int reservationID, int customerID, DateTime reservationDate, Table table, string status, string? specialRequests = null)
+        public Reservation(int reservationID, Customer customer, DateTime reservationDateTime, Table table, string status, string? specialRequests = null)
         {
             ReservationID = reservationID;
-            CustomerID = customerID;
-            ReservationDate = reservationDate;
+            Customer = customer;
+            SetCustomer(customer); // Establish bidirectional association
+            ReservationDateTime = reservationDateTime;
             Table = table;
             Status = status;
             SpecialRequests = specialRequests;
@@ -223,13 +216,12 @@ namespace BYT_Assignment_3.Models
             TotalReservations = reservations.Count;
         }
 
-
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
         public Reservation() { }
-        
-       // -------------------------------
+
+        // -------------------------------
         // Association Methods
         // -------------------------------
         /// <summary>
@@ -244,6 +236,12 @@ namespace BYT_Assignment_3.Models
             {
                 // Remove from the old table's reservations
                 this.table.RemoveReservation(this);
+            }
+
+            // **Enforce uniqueness of ReservationDateTime per Table**
+            if (newTable.Reservations.Any(r => r.ReservationDateTime == this.ReservationDateTime && r != this))
+            {
+                throw new ArgumentException($"A reservation already exists at {this.ReservationDateTime} for this table.");
             }
 
             this.table = newTable;
@@ -281,8 +279,8 @@ namespace BYT_Assignment_3.Models
             if (obj is Reservation other)
             {
                 return ReservationID == other.ReservationID &&
-                       CustomerID == other.CustomerID &&
-                       ReservationDate == other.ReservationDate &&
+                       Customer.Equals(other.Customer) &&
+                       ReservationDateTime == other.ReservationDateTime &&
                        SpecialRequests == other.SpecialRequests &&
                        Status == other.Status &&
                        Table.Equals(other.Table);
@@ -293,7 +291,7 @@ namespace BYT_Assignment_3.Models
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ReservationID, CustomerID, ReservationDate, SpecialRequests, Status, Table);
+            return HashCode.Combine(ReservationID, Customer, ReservationDateTime, SpecialRequests, Status, Table);
         }
     }
 }
