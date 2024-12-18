@@ -56,7 +56,7 @@ namespace BYT_Assignment_3
                         ManageWaiterBartenders();
                         break;
                     case "6":
-                        ManageOrders();
+                        ManageWaiterBartenders();
                         break;
                     case "7":
                         ManageTables();
