@@ -202,5 +202,59 @@ namespace BYT_Assignment_3.Models
         {
             return HashCode.Combine(RestaurantId, Name, Address, ContactNumber);
         }
+
+        private List<Staff> _staff = new List<Staff>();
+
+        public IReadOnlyList<Staff> GetStaff()
+        {
+            return _staff.AsReadOnly();
+        }
+
+        public void AddStaff(Staff staff)
+        {
+            if (staff == null)
+            {
+                throw new ArgumentException("Staff cant be null");
+            }
+
+            if (_staff.Contains(staff))
+                return;
+            
+            _staff.Add(staff);
+            if (staff.GetRestaurant() != this)
+            {
+                staff.AddRestaurant(this);
+            }
+        }
+
+        public void RemoveStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentException("Feedback cannot be null.");
+
+            if (!_staff.Contains(staff))
+                throw new KeyNotFoundException("The specified feedback is not associated with this customer.");
+
+            _staff.Remove(staff);
+
+            if (staff.GetRestaurant() == this)
+            {
+                staff.RemoveRest(this);
+            }
+        }
+
+        public void ModifyStaff(Staff oldStaff, Staff newStaff)
+        {
+            if (oldStaff == null || newStaff == null)
+                throw new ArgumentException("Staff members cannot be null.");
+
+            if (!_staff.Contains(oldStaff))
+                throw new InvalidOperationException("The specified old staff member is not associated with this restaurant.");
+
+            RemoveStaff(oldStaff);
+
+            AddStaff(newStaff);
+        }
+
     }
 }

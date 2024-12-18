@@ -215,5 +215,72 @@ namespace BYT_Assignment_3.Models
         {
             return HashCode.Combine(FeedbackID, CustomerID, Rating, DateTime, Comments);
         }
+
+
+        private List<Customer> _customers = new List<Customer>();
+
+        /// <summary>
+        /// Relation implementation
+        /// </summary>
+
+        public void AddCustomer(Customer customer)
+        {
+            if (customer == null)
+                throw new ArgumentException("Feedback cannot be null.");
+
+            if (_customers.Contains(customer))
+                return;
+
+            _customers.Add(customer);
+            if (!customer.GetFeedbacks().Contains(this))
+            {
+                customer.AddFeedback(this);
+            }
+        }
+
+        public void ModifyCustomer(Customer oldCustomer, Customer newCustomer)
+        {
+            if (oldCustomer == null || newCustomer == null)
+                throw new ArgumentException("Customer cannot be null.");
+
+            int index = _customers.IndexOf(oldCustomer);
+            if (index == -1)
+                throw new ArgumentException("Customer not found.");
+
+            _customers[index] = newCustomer;
+
+            // Update reverse relationship
+            if (oldCustomer.GetFeedbacks().Contains(this))
+            {
+                oldCustomer.RemoveFeedback(this);
+            }
+
+            if (!newCustomer.GetFeedbacks().Contains(this))
+            {
+                newCustomer.AddFeedback(this);
+            }
+        }
+
+        public void RemoveCustomer(Customer customer)
+        {
+            if (customer == null)
+                throw new ArgumentException("Customer cannot be null");
+
+            if (!_customers.Contains(customer))
+                throw new KeyNotFoundException("The specified customer is not associated with this feedback.");
+
+            _customers.Remove(customer);
+
+            if (customer.GetFeedbacks().Contains(this))
+            {
+                customer.RemoveFeedback(this);
+            }
+        }
+
+
+        public IReadOnlyList<Customer> GetCustomers()
+        {
+            return _customers.AsReadOnly();
+        }
     }
 }

@@ -72,6 +72,69 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Optional Attributes
         // -------------------------------
+        private List<Feedback> _feedbacks = new List<Feedback>();
+
+        public void AddFeedback(Feedback feedback)
+        {
+            if (feedback == null)
+                throw new ArgumentException("Feedback cannot be null.");
+            if (_feedbacks.Contains(feedback))
+                return;
+
+            _feedbacks.Add(feedback);
+
+            if (!feedback.GetCustomers().Contains(this))
+            {
+                feedback.AddCustomer(this);
+            }
+        }
+
+        public void ModifyFeedback(Feedback oldFeedback, Feedback newFeedback)
+        {
+            if (oldFeedback == null || newFeedback == null)
+                throw new ArgumentException("Feedback cannot be null.");
+
+            int index = _feedbacks.IndexOf(oldFeedback);
+            if (index == -1)
+                throw new ArgumentException("Feedback not found.");
+
+            _feedbacks[index] = newFeedback;
+
+            // Update reverse relationship
+            if (oldFeedback.GetCustomers().Contains(this))
+            {
+                oldFeedback.RemoveCustomer(this);
+            }
+
+            if (!newFeedback.GetCustomers().Contains(this))
+            {
+                newFeedback.AddCustomer(this);
+            }
+        }
+
+        // Remove Feedback method
+        public void RemoveFeedback(Feedback feedback)
+        {
+            if (feedback == null)
+                throw new ArgumentException("Feedback cannot be null.");
+
+            if (!_feedbacks.Contains(feedback))
+                throw new KeyNotFoundException("The specified feedback is not associated with this customer.");
+
+            _feedbacks.Remove(feedback);
+
+            if (feedback.GetCustomers().Contains(this))
+            {
+                feedback.RemoveCustomer(this);
+            }
+        }
+
+        public IReadOnlyList<Feedback> GetFeedbacks()
+        {
+            return _feedbacks.AsReadOnly();
+        }
+
+
         private string? email;
         public string? Email
         {

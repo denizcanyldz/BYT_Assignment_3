@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Runtime.InteropServices.Marshalling;
+using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
@@ -126,5 +127,183 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         protected Staff() { }
+
+        /// <summary>
+        /// Reflex Association Implementation
+        /// </summary>
+        
+        private Staff _supervisor;
+
+        private List<Staff> _slaves = new List<Staff>();
+
+        public void startManaging(Staff slave)
+        {
+            if (slave == null)
+                throw new ArgumentException("Staff to be managed cannot be null.");
+
+            if (slave == this)
+                throw new InvalidOperationException("A staff member cannot supervise itself.");
+
+            if (!_slaves.Contains(slave))
+            {
+                _slaves.Add(slave);
+            }
+            else
+            {
+                return;
+            }
+
+            if (slave.GetSupervisor() == this)
+                return;
+            else
+                slave.setSupervisor(this);
+        }
+
+        public void setSupervisor(Staff supervisor)
+        {
+
+            if (this._supervisor == supervisor)
+                return;
+
+            if (supervisor == null)
+            {
+                _supervisor = null;
+                return;
+            }
+
+            if (this._supervisor != null)
+                throw new InvalidOperationException("This staff member already has a supervisor.");
+            
+            if (supervisor == this)
+                throw new InvalidOperationException("A staff member cannot supervise itself.");
+
+            this._supervisor = supervisor;
+            supervisor.startManaging(this);
+        }
+
+
+        public void removeManagedStaff(Staff slave)
+        {
+            if (slave == null)
+                throw new ArgumentException("The staff member to be removed cannot be null.");
+
+            if (!_slaves.Contains(slave))
+                throw new InvalidOperationException("The specified staff member is not being managed by this supervisor.");
+
+            _slaves.Remove(slave);
+            slave.setSupervisor(null);
+        }
+
+        public void removeSupervisor()
+        {
+            if (this._supervisor == null)
+                throw new InvalidOperationException("This staff member does not have a supervisor to remove.");
+            if (!this._supervisor._slaves.Contains(this))
+                throw new ArgumentException("This staff member is not being supervised b");
+
+            this._supervisor._slaves.Remove(this);
+            this._supervisor = null;
+        }
+
+        public void modifyManagedStaff(Staff oldSlave, Staff newSlave)
+        {
+            if (oldSlave == null || newSlave == null)
+                throw new ArgumentException("Staff members cannot be null.");
+
+            if (!_slaves.Contains(oldSlave))
+                throw new InvalidOperationException("The specified staff member to be replaced is not being managed by this supervisor.");
+
+            removeManagedStaff(oldSlave);
+            startManaging(newSlave);
+        }
+
+        public void modifySupervisor(Staff newSupervisor)
+        {
+            if (newSupervisor == null)
+                throw new ArgumentException("The new supervisor cannot be null.");
+
+            if (this._supervisor == newSupervisor)
+                throw new InvalidOperationException("This staff member is already supervised by the specified supervisor.");
+
+            if (newSupervisor == this)
+                throw new InvalidOperationException("A staff member cannot supervise itself.");
+
+            if (this._supervisor != null)
+            {
+                removeSupervisor();
+            }
+
+            setSupervisor(newSupervisor);
+        }
+
+        /// <summary>
+        /// Returns a readonly list of managed staff members.
+        /// </summary>
+        public IReadOnlyList<Staff> GetManagedStaff()
+        {
+            return _slaves.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Returns the supervisor of the staff member.
+        /// </summary>
+        public Staff? GetSupervisor()
+        {
+            return _supervisor;
+        }
+
+
+        private Restaurant _restaurant;
+        public Restaurant? GetRestaurant()
+        {
+            return _restaurant;
+        }
+        
+        public void AddRestaurant(Restaurant rest)
+        {
+            if (rest == null)
+            {
+                throw new ArgumentException("Restaurant cannot be null.");
+            }
+
+            if (this._restaurant == rest)
+                return;
+
+            _restaurant = rest;
+            if (!rest.GetStaff().Contains(this))
+            {
+                rest.AddStaff(this);
+            }
+        }
+
+        public void RemoveRest(Restaurant rest)
+        {
+            if (rest == null)
+                throw new ArgumentException("Restaurant cannot be null.");
+
+            if (_restaurant != rest)
+                throw new KeyNotFoundException("The specified restaurant is not associated with this staff.");
+
+            _restaurant = null;
+
+            if (rest.GetStaff().Contains(this))
+            {
+                rest.RemoveStaff(this);
+            }
+        }
+
+        public void ModifyRestaurant(Restaurant newRestaurant)
+        {
+            if (newRestaurant == null)
+                throw new ArgumentException("New restaurant cannot be null.");
+
+            if (_restaurant != null)
+            {
+                _restaurant.RemoveStaff(this);
+            }
+
+            AddRestaurant(newRestaurant);
+        }
+
     }
 }
