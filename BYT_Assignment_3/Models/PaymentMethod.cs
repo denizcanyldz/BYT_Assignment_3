@@ -1,3 +1,5 @@
+using System.Xml.Serialization;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
@@ -44,6 +46,7 @@ namespace BYT_Assignment_3.Models
             TotalPaymentMethods = paymentMethods.Count;
         }
 
+       
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
@@ -56,11 +59,12 @@ namespace BYT_Assignment_3.Models
             get => methodName;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("MethodName cannot be null or empty.");
                 methodName = value;
             }
         }
+
 
         // -------------------------------
         // Optional Attributes
@@ -72,11 +76,19 @@ namespace BYT_Assignment_3.Models
             get => description;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 200)
+                if (!string.IsNullOrEmpty(value) && value.Length > 200)
                     throw new ArgumentException("Description length cannot exceed 200 characters.");
                 description = value;
             }
         }
+
+        // -------------------------------
+        // Multi-Value Attributes
+        // -------------------------------
+        private List<Payment> payments = new List<Payment>();
+
+        [XmlIgnore]
+        public IReadOnlyList<Payment> Payments => payments.AsReadOnly();
 
         // -------------------------------
         // Constructors
@@ -100,9 +112,47 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public PaymentMethod() { }
         
-        /// <summary>
-        /// Determines whether the specified object is equal to the current PaymentMethod.
-        /// </summary>
+       // -------------------------------
+        // Association Methods
+        // -------------------------------
+        public void AddPayment(Payment payment)
+        {
+            if (payment == null)
+                throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
+            if (!payments.Contains(payment))
+            {
+                payments.Add(payment);
+                payment.SetPaymentMethod(this);
+            }
+        }
+
+        public void RemovePayment(Payment payment)
+        {
+            if (payment == null || !payments.Contains(payment))
+                throw new ArgumentException("Payment not found in the PaymentMethod.");
+            payments.Remove(payment);
+            payment.RemovePaymentMethod();
+        }
+
+        public void UpdatePayment(Payment oldPayment, Payment newPayment)
+        {
+            if (oldPayment == null || newPayment == null)
+                throw new ArgumentNullException("Payment cannot be null.");
+            if (!payments.Contains(oldPayment))
+                throw new ArgumentException("Old Payment not found in the PaymentMethod.");
+            if (payments.Contains(newPayment))
+                throw new ArgumentException("New Payment already exists in the PaymentMethod.");
+
+            // Remove old payment
+            RemovePayment(oldPayment);
+
+            // Add new payment
+            AddPayment(newPayment);
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is PaymentMethod other)
@@ -114,9 +164,6 @@ namespace BYT_Assignment_3.Models
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(PaymentMethodID, MethodName, Description);

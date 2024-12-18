@@ -161,6 +161,25 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("Ingredient not found in the inventory.");
             }
         }
+        
+        /// <summary>
+        /// Updates an existing Ingredient in the Inventory.
+        /// </summary>
+        public void UpdateIngredient(Ingredient oldIngredient, Ingredient newIngredient)
+        {
+            if (oldIngredient == null || newIngredient == null)
+                throw new ArgumentNullException("Ingredient cannot be null.");
+            if (!ingredients.Contains(oldIngredient))
+                throw new ArgumentException("Old Ingredient not found in the Inventory.");
+            if (ingredients.Contains(newIngredient))
+                throw new ArgumentException("New Ingredient already exists in the Inventory.");
+
+            // Remove old ingredient
+            RemoveIngredient(oldIngredient);
+
+            // Add new ingredient
+            AddIngredient(newIngredient);
+        }
 
         // -------------------------------
         // Derived Attributes

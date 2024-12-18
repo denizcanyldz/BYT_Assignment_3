@@ -124,6 +124,49 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         public bool IsSuccessful => Amount > 0;
 
+        private PaymentMethod paymentMethod;
+
+        public PaymentMethod PaymentMethod
+        {
+            get => paymentMethod;
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(paymentMethod), "PaymentMethod cannot be null.");
+                paymentMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Sets the PaymentMethod for the Payment.
+        /// </summary>
+        public void SetPaymentMethod(PaymentMethod method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method), "PaymentMethod cannot be null.");
+            PaymentMethod = method;
+            if (!method.Payments.Contains(this))
+            {
+                method.AddPayment(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the PaymentMethod association from the Payment.
+        /// </summary>
+        public void RemovePaymentMethod()
+        {
+            if (paymentMethod != null)
+            {
+                var oldMethod = paymentMethod;
+                paymentMethod = null;
+                if (oldMethod.Payments.Contains(this))
+                {
+                    oldMethod.RemovePayment(this);
+                }
+            }
+        }
+        
         // -------------------------------
         // Constructors
         // -------------------------------

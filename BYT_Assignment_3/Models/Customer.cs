@@ -99,29 +99,54 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        [XmlIgnore] // Prevent direct serialization of the collection
+        
+        [XmlArray("Reservations")]
+        [XmlArrayItem("Reservation")]
         public List<Reservation> Reservations { get; set; } = new List<Reservation>();
 
         /// <summary>
-        /// Adds a reservation to the customer's reservation list.
+        /// Adds a Reservation to the Customer's list.
         /// </summary>
         public void AddReservation(Reservation reservation)
         {
-            if(reservation == null)
-                throw new ArgumentException("Reservation cannot be null.");
-            Reservations.Add(reservation);
+            if (reservation == null)
+                throw new ArgumentNullException(nameof(reservation), "Reservation cannot be null.");
+            if (!Reservations.Contains(reservation))
+            {
+                Reservations.Add(reservation);
+                reservation.SetCustomer(this);
+            }
         }
 
         /// <summary>
-        /// Removes a reservation from the customer's reservation list.
+        /// Removes a Reservation from the Customer's list.
         /// </summary>
         public void RemoveReservation(Reservation reservation)
         {
-            if(reservation == null || !Reservations.Contains(reservation))
-                throw new ArgumentException("Reservation not found.");
+            if (reservation == null || !Reservations.Contains(reservation))
+                throw new ArgumentException("Reservation not found in the Customer.");
             Reservations.Remove(reservation);
+            reservation.RemoveCustomer();
         }
 
+        /// <summary>
+        /// Updates a Reservation in the Customer's list.
+        /// </summary>
+        public void UpdateReservation(Reservation oldReservation, Reservation newReservation)
+        {
+            if (oldReservation == null || newReservation == null)
+                throw new ArgumentNullException("Reservation cannot be null.");
+            if (!Reservations.Contains(oldReservation))
+                throw new ArgumentException("Old Reservation not found in the Customer.");
+            if (Reservations.Contains(newReservation))
+                throw new ArgumentException("New Reservation already exists in the Customer.");
+
+            // Remove old reservation
+            RemoveReservation(oldReservation);
+
+            // Add new reservation
+            AddReservation(newReservation);
+        }
         // -------------------------------
         // Derived Attributes
         // -------------------------------

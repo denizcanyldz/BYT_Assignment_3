@@ -160,7 +160,49 @@ namespace BYT_Assignment_3.Models
         /// Gets the total number of guests based on order items.
         /// </summary>
         public int NumberOfGuests => orderItems.Sum(item => item.Quantity);
+        private Customer customer;
 
+        [XmlIgnore]
+        public Customer Customer
+        {
+            get => customer;
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(Customer), "Customer cannot be null.");
+                customer = value;
+            }
+        }
+
+        /// <summary>
+        /// Sets the Customer for the Reservation.
+        /// </summary>
+        public void SetCustomer(Customer newCustomer)
+        {
+            if (newCustomer == null)
+                throw new ArgumentNullException(nameof(newCustomer), "Customer cannot be null.");
+            Customer = newCustomer;
+            if (!newCustomer.Reservations.Contains(this))
+            {
+                newCustomer.AddReservation(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the Customer association from the Reservation.
+        /// </summary>
+        public void RemoveCustomer()
+        {
+            if (customer != null)
+            {
+                var oldCustomer = customer;
+                customer = null;
+                if (oldCustomer.Reservations.Contains(this))
+                {
+                    oldCustomer.RemoveReservation(this);
+                }
+            }
+        }
         // -------------------------------
         // Constructors
         // -------------------------------
@@ -187,9 +229,53 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public Reservation() { }
         
+       // -------------------------------
+        // Association Methods
+        // -------------------------------
         /// <summary>
-        /// Determines whether the specified object is equal to the current Reservation.
+        /// Sets the Table for the Reservation, maintaining bidirectional association.
         /// </summary>
+        public void SetTable(Table newTable)
+        {
+            if (newTable == null)
+                throw new ArgumentNullException(nameof(newTable), "Table cannot be null.");
+
+            if (this.table != null && this.table != newTable)
+            {
+                // Remove from the old table's reservations
+                this.table.RemoveReservation(this);
+            }
+
+            this.table = newTable;
+
+            // Add this reservation to the new table's reservations if not already present
+            if (!newTable.Reservations.Contains(this))
+            {
+                newTable.AddReservation(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Table, maintaining bidirectional consistency.
+        /// </summary>
+        public void RemoveTable()
+        {
+            if (this.table != null)
+            {
+                var oldTable = this.table;
+                this.table = null;
+
+                // Remove this reservation from the old table's reservations
+                if (oldTable.Reservations.Contains(this))
+                {
+                    oldTable.RemoveReservation(this);
+                }
+            }
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Reservation other)
@@ -205,9 +291,6 @@ namespace BYT_Assignment_3.Models
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(ReservationID, CustomerID, ReservationDate, SpecialRequests, Status, Table);

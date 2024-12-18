@@ -25,4 +25,10 @@
         <Using Include="NUnit.Framework"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="AssociationTests\PaymentPaymentMethod\" />
+      <Folder Include="AssociationTests\ReservationCustomer\" />
+      <Folder Include="AssociationTests\TableReservation\" />
+    </ItemGroup>
+
 </Project>

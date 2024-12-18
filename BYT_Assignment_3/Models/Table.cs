@@ -126,6 +126,54 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         public bool IsOccupied => orders.Count > 0;
 
+        private List<Reservation> reservations = new List<Reservation>();
+
+        [XmlIgnore]
+        public IReadOnlyList<Reservation> Reservations => reservations.AsReadOnly();
+
+        /// <summary>
+        /// Adds a Reservation to the Table.
+        /// </summary>
+        public void AddReservation(Reservation reservation)
+        {
+            if (reservation == null)
+                throw new ArgumentNullException(nameof(reservation), "Reservation cannot be null.");
+            if (!reservations.Contains(reservation))
+            {
+                reservations.Add(reservation);
+                reservation.SetTable(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes a Reservation from the Table.
+        /// </summary>
+        public void RemoveReservation(Reservation reservation)
+        {
+            if (reservation == null || !reservations.Contains(reservation))
+                throw new ArgumentException("Reservation not found in the Table.");
+            reservations.Remove(reservation);
+            reservation.RemoveTable();
+        }
+
+        /// <summary>
+        /// Updates a Reservation in the Table.
+        /// </summary>
+        public void UpdateReservation(Reservation oldReservation, Reservation newReservation)
+        {
+            if (oldReservation == null || newReservation == null)
+                throw new ArgumentNullException("Reservation cannot be null.");
+            if (!reservations.Contains(oldReservation))
+                throw new ArgumentException("Old Reservation not found in the Table.");
+            if (reservations.Contains(newReservation))
+                throw new ArgumentException("New Reservation already exists in the Table.");
+
+            // Remove old reservation
+            RemoveReservation(oldReservation);
+
+            // Add new reservation
+            AddReservation(newReservation);
+        }
         // -------------------------------
         // Constructors
         // -------------------------------
