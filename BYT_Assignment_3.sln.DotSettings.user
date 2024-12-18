@@ -33,6 +33,7 @@
       &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.ChefTests&lt;/TestId&gt;
       &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.CustomerTests&lt;/TestId&gt;
       &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.ModelsTests.FeedbackTests&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::92B499D1-E502-4A6D-9046-B4094D4B7FCF::net8.0::Tests.AssociationTests.IngredientMenuItemAssociationTests&lt;/TestId&gt;
     &lt;/TestAncestor&gt;
     &lt;ProjectFolder&gt;92B499D1-E502-4A6D-9046-B4094D4B7FCF/d:ModelsTests&lt;/ProjectFolder&gt;
   &lt;/Or&gt;
