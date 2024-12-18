@@ -245,6 +245,54 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
+        // Association Attributes
+        // -------------------------------
+        private Menu menu;
+
+        /// <summary>
+        /// Gets the Menu associated with the MenuItem.
+        /// </summary>
+        public Menu Menu => menu;
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+        internal void SetMenu(Menu menu)
+        {
+            if (menu == null)
+                throw new ArgumentException("Menu cannot be null.");
+            
+            if(this.menu != null && this.menu != menu)
+            {
+                // Remove from previous menu
+                this.menu.RemoveMenuItem(this);
+            }
+            
+            this.menu = menu;
+            
+            // Ensure reverse connection
+            if (!menu.MenuItems.Contains(this))
+            {
+                menu.AddMenuItem(this);
+            }
+        }
+
+        internal void RemoveMenu()
+        {
+            if (menu != null)
+            {
+                var oldMenu = menu;
+                menu = null;
+                
+                // Remove reverse connection
+                if (oldMenu.MenuItems.Contains(this))
+                {
+                    oldMenu.RemoveMenuItem(this);
+                }
+            }
+        }
+
+        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
@@ -269,10 +317,10 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public MenuItem() { }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current MenuItem.
-        /// </summary>
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is MenuItem other)
@@ -284,14 +332,11 @@ namespace BYT_Assignment_3.Models
                        Calories == other.Calories &&
                        DiscountPrice == other.DiscountPrice &&
                        PreparationTime == other.PreparationTime;
-                // Excluding Ingredients collection to simplify equality
+                // Excluding Menu reference for simplicity
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(MenuItemID, Name, IsAvailable, BasePrice, Calories, DiscountPrice, PreparationTime);

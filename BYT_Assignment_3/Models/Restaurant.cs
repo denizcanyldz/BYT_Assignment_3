@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -11,7 +13,7 @@ namespace BYT_Assignment_3.Models
         private static int totalRestaurants = 0;
         
         /// <summary>
-        /// Gets or sets the total number of WaiterBartenders.
+        /// Gets or sets the total number of restaurants.
         /// </summary>
         public static int TotalRestaurants
         {
@@ -19,7 +21,7 @@ namespace BYT_Assignment_3.Models
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("TotalWaiterBartenders cannot be negative.");
+                    throw new ArgumentException("TotalRestaurants cannot be negative.");
                 totalRestaurants = value;
             }
         }
@@ -29,9 +31,8 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         private static List<Restaurant> restaurants = new List<Restaurant>();
         
-        
         /// <summary>
-        /// Gets a read-only list of all restaurant items.
+        /// Gets a read-only list of all restaurants.
         /// </summary>
         public static IReadOnlyList<Restaurant> GetAll()
         {
@@ -43,8 +44,18 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<Restaurant> loadedRestaurants)
         {
-            restaurants = loadedRestaurants ?? new List<Restaurant>();
+            if (loadedRestaurants == null)
+                throw new ArgumentNullException(nameof(loadedRestaurants), "Loaded restaurants list cannot be null.");
+            restaurants = loadedRestaurants;
             TotalRestaurants = restaurants.Count;
+
+            // Update Staff extent based on loaded restaurants
+            List<Staff> allStaff = new List<Staff>();
+            foreach (var restaurant in restaurants)
+            {
+                allStaff.AddRange(restaurant.StaffMembers);
+            }
+            Staff.SetAll(allStaff);
             Staff.TotalStaff = Staff.GetAll().Count;
         }
         
@@ -64,6 +75,7 @@ namespace BYT_Assignment_3.Models
                 name = value;
             }
         }
+
         private string address;
         public string Address
         {
@@ -75,6 +87,7 @@ namespace BYT_Assignment_3.Models
                 address = value;
             }
         }
+
         private string contactNumber;
         public string ContactNumber
         {
@@ -86,24 +99,80 @@ namespace BYT_Assignment_3.Models
                 contactNumber = value;
             }
         }
-        public List<Menu> Menus { get; set; }
+
+        public List<Menu> Menus { get; set; } = new List<Menu>();
 
         // -------------------------------
-        // Optional Attributes
+        // Multi-Value Attributes
         // -------------------------------
-        [XmlIgnore] // Prevent direct serialization of the collection
+        private readonly List<Staff> staffMembers = new List<Staff>();
+        
+        /// <summary>
+        /// Gets a read-only list of staff members associated with the restaurant.
+        /// </summary>
+        public IReadOnlyList<Staff> StaffMembers => staffMembers.AsReadOnly();
+
+        // -------------------------------
+        // Additional Attributes
+        // -------------------------------
         public Dictionary<string, string> OpeningHours { get; set; } = new Dictionary<string, string>();
 
-        
         public List<Order> Orders { get; set; } = new List<Order>();
         public List<Payment> Payments { get; set; } = new List<Payment>();
         public List<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public List<Reservation> Reservations { get; set; } = new List<Reservation>();
-        
-        
+
         // -------------------------------
-        // Methods to Add Orders, Payments, Feedbacks, Reservations
+        // Association Methods
         // -------------------------------
+        /// <summary>
+        /// Adds a Staff member to the Restaurant.
+        /// </summary>
+        public void AddStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentException("Staff cannot be null.");
+
+            if (!staffMembers.Contains(staff))
+            {
+                staffMembers.Add(staff);
+                staff.SetRestaurant(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes a Staff member from the Restaurant.
+        /// </summary>
+        public void RemoveStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentException("Staff cannot be null.");
+
+            if (staffMembers.Contains(staff))
+            {
+                staffMembers.Remove(staff);
+                staff.RemoveRestaurant();
+            }
+        }
+
+        /// <summary>
+        /// Updates a Staff member's association with the Restaurant.
+        /// </summary>
+        public void UpdateStaff(Staff oldStaff, Staff newStaff)
+        {
+            if (oldStaff == null || newStaff == null)
+                throw new ArgumentException("Staff cannot be null.");
+
+            if (!staffMembers.Contains(oldStaff))
+                throw new ArgumentException("Old Staff member not found in the Restaurant.");
+
+            // Remove old staff
+            RemoveStaff(oldStaff);
+
+            // Add new staff
+            AddStaff(newStaff);
+        }
+
         /// <summary>
         /// Adds an Order to the Restaurant.
         /// </summary>
@@ -143,45 +212,52 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("Reservation cannot be null.");
             Reservations.Add(reservation);
         }
-        
-        
+
+        // -------------------------------
+        // Constructors
+        // -------------------------------
         /// <summary>
         /// Initializes a new instance of the Restaurant class with mandatory and optional attributes.
         /// </summary>
-        /// <param name="restaurantId">The unique identifier for the restaurant.</param>
-        /// <param name="name">The name of the restaurant.</param>
-        /// <param name="address">The address of the restaurant.</param>
-        /// <param name="contactNumber">The contact number for the restaurant.</param>
-        /// <param name="openingHours">The dictionary of opening hours, with day names as keys and opening times as values.</param>
-        /// <param name="menus">The list of menus of the restaurant.</param>
-        public Restaurant(int restaurantId, string name, string address, string contactNumber, List<Menu> menus, Dictionary<string, string> openingHours = null)
+        public Restaurant(int restaurantId, string name, string address, string contactNumber, List<Menu> menus, Dictionary<string, string>? openingHours = null)
         {
             RestaurantId = restaurantId;
             Name = name;
             Address = address;
             ContactNumber = contactNumber;
-            Menus = menus;
-            
-            // Initialize OpeningHours if provided
+            Menus = menus ?? throw new ArgumentException("Menus list cannot be null.");
+
             if (openingHours != null)
             {
                 OpeningHours = openingHours;
             }
-            
-            // Add to the restaurants extent and update total
+
+            // Add to class extent and update total
             restaurants.Add(this);
             TotalRestaurants = restaurants.Count;
         }
-        
-        
+
+        /// <summary>
+        /// Initializes a new instance of the Restaurant class with mandatory attributes only.
+        /// </summary>
+        public Restaurant(int restaurantId, string name, string address, string contactNumber)
+            : this(restaurantId, name, address, contactNumber, new List<Menu>(), null)
+        {
+        }
+
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Restaurant(){}
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Restaurant.
-        /// </summary>
+        public Restaurant()
+        {
+            // Initialize Menus and OpeningHours
+            Menus = new List<Menu>();
+            OpeningHours = new Dictionary<string, string>();
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Restaurant other)
@@ -190,14 +266,11 @@ namespace BYT_Assignment_3.Models
                        Name == other.Name &&
                        Address == other.Address &&
                        ContactNumber == other.ContactNumber;
-                // Excluding Menus and OpeningHours collections to simplify equality
+                // Excluding StaffMembers and Menus for simplicity
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(RestaurantId, Name, Address, ContactNumber);

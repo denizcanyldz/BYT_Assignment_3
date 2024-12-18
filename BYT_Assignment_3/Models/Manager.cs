@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class Manager
+    public class Manager : Staff
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalManagers = 0;
 
@@ -19,7 +19,7 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static int TotalManagers
         {
-            get => totalManagers;
+            get => totalManagers; 
             set
             {
                 if (value < 0)
@@ -46,37 +46,13 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<Manager> loadedManagers)
         {
-            if(loadedManagers == null)
+            if (loadedManagers == null)
                 throw new ArgumentNullException(nameof(loadedManagers), "Loaded managers list cannot be null.");
 
             managers = loadedManagers ?? new List<Manager>();
             TotalManagers = managers.Count;
-        }
-
-        // -------------------------------
-        // Mandatory Attributes (Simple)
-        // -------------------------------
-        private int managerID;
-        public int ManagerID{
-            get => managerID;
-            set{
-                if(value <=0)
-                    throw new ArgumentException("ManagerID must be greater than zero.");
-                managerID = value;
-            }
-        }
-
-        private string name;
-
-        public string Name
-        {
-            get => name;
-            set
-            {
-                if(string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentException("Name cannot be null or empty.");
-                name = value;
-            }
+            Staff.SetAll(new List<Staff>(managers));
+            Staff.TotalStaff = Staff.GetAll().Count;
         }
 
         // -------------------------------
@@ -89,7 +65,7 @@ namespace BYT_Assignment_3.Models
             get => department;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 100)
+                if (!string.IsNullOrEmpty(value) && value.Length > 100)
                     throw new ArgumentException("Department length cannot exceed 100 characters.");
                 department = value;
             }
@@ -101,42 +77,37 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Manager class with mandatory and optional attributes.
         /// </summary>
-        public Manager(int managerID, string name, string? department = null)
+        public Manager(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null, string? department = null)
+            : base(staffID, name, contactNumber, restaurant)
         {
-            ManagerID = managerID;
-            Name = name;
             Department = department;
-
-            // Add to class extent
+            // Add to manager extent
             managers.Add(this);
             TotalManagers = managers.Count;
         }
 
+
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Manager() { }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Manager.
-        /// </summary>
+        public Manager() : base() { }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Manager other)
             {
-                return ManagerID == other.ManagerID &&
-                       Name == other.Name &&
+                return base.Equals(other) &&
                        Department == other.Department;
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(ManagerID, Name, Department);
+            return HashCode.Combine(base.GetHashCode(), Department);
         }
     }
 }

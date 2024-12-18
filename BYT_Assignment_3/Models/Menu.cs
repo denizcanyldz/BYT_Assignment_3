@@ -60,31 +60,88 @@ namespace BYT_Assignment_3.Models
                 menuId = value;
             }
         }
-        private List<MenuItem> menuItems;
-        public List<MenuItem> MenuItems{
-            get => menuItems;
-            set{
-                if(value == null || value.Count == 0)
-                    throw new ArgumentException("MenuItems cannot be null or empty.");
-                menuItems = value;
+       
+        
+        // -------------------------------
+        // Multi-Value Attributes
+        // -------------------------------
+        private readonly List<MenuItem> menuItems = new List<MenuItem>();
+        
+        /// <summary>
+        /// Gets a read-only list of menu items in the menu.
+        /// </summary>
+        public IReadOnlyList<MenuItem> MenuItems => menuItems.AsReadOnly();
+        
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Adds a MenuItem to the Menu.
+        /// </summary>
+        public void AddMenuItem(MenuItem menuItem)
+        {
+            if(menuItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+            
+            if(!menuItems.Contains(menuItem))
+            {
+                menuItems.Add(menuItem);
+                menuItem.SetMenu(this);
             }
         }
         
+        /// <summary>
+        /// Removes a MenuItem from the Menu.
+        /// </summary>
+        public void RemoveMenuItem(MenuItem menuItem)
+        {
+            if(menuItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+            
+            if(menuItems.Contains(menuItem))
+            {
+                menuItems.Remove(menuItem);
+                menuItem.RemoveMenu();
+            }
+        }
+        
+        /// <summary>
+        /// Updates a MenuItem in the Menu.
+        /// </summary>
+        public void UpdateMenuItem(MenuItem oldItem, MenuItem newItem)
+        {
+            if(oldItem == null || newItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+            
+            if(!menuItems.Contains(oldItem))
+                throw new ArgumentException("Old MenuItem not found in the Menu.");
+            
+            // Remove old item
+            RemoveMenuItem(oldItem);
+            
+            // Add new item
+            AddMenuItem(newItem);
+        }
         
         // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
-        /// Initializes a new instance of the Menu class with mandatory and optional attributes.
+        /// Initializes a new instance of the Menu class with mandatory attributes.
         /// </summary>
-        /// <param name="menuId">The unique identifier for the menu.</param>
-        /// <param name="menuItems">The list of menu items that the menu contains.</param>
         public Menu(int menuId, List<MenuItem> menuItems)
         {
             MenuId = menuId;
-            MenuItems = menuItems;
-            
-            // Add to the menus extent and update total
+
+            if (menuItems == null)
+                throw new ArgumentException("MenuItems list cannot be null.");
+
+            foreach (var item in menuItems)
+            {
+                AddMenuItem(item);
+            }
+
+            // Add to class extent and update total
             menus.Add(this);
             TotalMenus = menus.Count;
         }
@@ -94,30 +151,24 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public Menu()
         {
-            MenuItems = new List<MenuItem>();
-            
-            // Add to the menus extent and update total
-            menus.Add(this);
-            TotalMenus = menus.Count;
+            // Initialize the menuItems list
         }
+
         
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Menu.
-        /// </summary>
+         
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Menu other)
             {
-                return MenuId == other.MenuId &&
-                       
-                       true;
+                return MenuId == other.MenuId;
+                // Excluding menuItems for simplicity
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(MenuId);

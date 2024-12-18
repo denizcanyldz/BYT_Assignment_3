@@ -394,7 +394,7 @@ namespace BYT_Assignment_3
                 bool tipsCollected = PromptForBool("Are tips collected? (y/n): ");
                 string contactNumber = PromptForString("Enter Contact Number: ");
 
-                var waiter = new Waiter(staffID, name, tipsCollected, contactNumber);
+                var waiter = new Waiter(staffID, name, contactNumber);
                 Console.WriteLine("Waiter added successfully!");
             }
             catch (Exception ex)

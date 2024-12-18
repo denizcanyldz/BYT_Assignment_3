@@ -42,6 +42,7 @@
         {
             waiters = loadedWaiters ?? new List<Waiter>();
             TotalWaiters = waiters.Count;
+            Staff.SetAll(new List<Staff>(waiters));
             Staff.TotalStaff = Staff.GetAll().Count;
         }
 
@@ -68,8 +69,8 @@
         /// <summary>
         /// Initializes a new instance of the Waiter class with mandatory and optional attributes.
         /// </summary>
-        public Waiter(int staffID, string name, bool tipsCollected = false, string? contactNumber = null)
-            : base(staffID, name, contactNumber)
+        public Waiter(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null, bool tipsCollected = false)
+            : base(staffID, name, contactNumber, restaurant)
         {
             TipsCollected = tipsCollected;
 
@@ -78,32 +79,28 @@
             TotalWaiters = waiters.Count;
         }
 
+
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
         public Waiter() : base() { }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current Waiter.
-        /// </summary>
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Waiter other)
             {
-                return StaffID == other.StaffID &&
-                       Name == other.Name &&
-                       ContactNumber == other.ContactNumber &&
+                return base.Equals(other) &&
                        TipsCollected == other.TipsCollected;
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(StaffID, Name, ContactNumber, TipsCollected);
+            return HashCode.Combine(base.GetHashCode(), TipsCollected);
         }
     }
 }
