@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -6,7 +9,7 @@ namespace BYT_Assignment_3.Models
     public class Order
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalOrders = 0;
 
@@ -51,10 +54,12 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         
         private int orderID;
-        public int OrderID{
+        public int OrderID
+        {
             get => orderID;
-            set{
-                if(value <= 0)
+            set
+            {
+                if (value <= 0)
                     throw new ArgumentException("OrderID must be greater than zero.");
                 orderID = value;
             }
@@ -83,7 +88,7 @@ namespace BYT_Assignment_3.Models
             get => notes;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 500)
+                if (!string.IsNullOrEmpty(value) && value.Length > 500)
                     throw new ArgumentException("Notes length cannot exceed 500 characters.");
                 notes = value;
             }
@@ -96,7 +101,7 @@ namespace BYT_Assignment_3.Models
             get => discountCode;
             set
             {
-                if(!string.IsNullOrEmpty(value) && !IsValidDiscountCode(value))
+                if (!string.IsNullOrEmpty(value) && !IsValidDiscountCode(value))
                     throw new ArgumentException("Invalid DiscountCode format.");
                 discountCode = value;
             }
@@ -125,26 +130,6 @@ namespace BYT_Assignment_3.Models
 
         [XmlIgnore] // Prevent direct serialization of the collection
         public IReadOnlyList<OrderItem> OrderItems => orderItems.AsReadOnly();
-
-        /// <summary>
-        /// Adds an order item to the order.
-        /// </summary>
-        public void AddOrderItem(OrderItem item)
-        {
-            if(item == null)
-                throw new ArgumentException("OrderItem cannot be null.");
-            orderItems.Add(item);
-        }
-
-        /// <summary>
-        /// Removes an order item from the order.
-        /// </summary>
-        public void RemoveOrderItem(OrderItem item)
-        {
-            if(item == null || !orderItems.Contains(item))
-                throw new ArgumentException("OrderItem not found.");
-            orderItems.Remove(item);
-        }
 
         // -------------------------------
         // Derived Attributes
@@ -176,7 +161,11 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Order() { }
+        public Order()
+        {
+            // Initialize lists if necessary
+            orderItems = new List<OrderItem>();
+        }
 
         // -------------------------------
         // Validation Helpers
@@ -185,10 +174,49 @@ namespace BYT_Assignment_3.Models
         {
             return code.Length == 10 && System.Text.RegularExpressions.Regex.IsMatch(code, @"^[a-zA-Z0-9]+$");
         }
-        
+
+        // -------------------------------
+        // Composition Methods
+        // -------------------------------
         /// <summary>
-        /// Determines whether the specified object is equal to the current Order.
+        /// Creates and adds a new OrderItem to the order.
         /// </summary>
+        public OrderItem CreateOrderItem(int orderItemID, string itemName, int quantity, double price, string? specialInstructions = null)
+        {
+            var orderItem = new OrderItem(orderItemID, itemName, quantity, price, specialInstructions);
+            AddOrderItem(orderItem);
+            return orderItem;
+        }
+
+        /// <summary>
+        /// Adds an existing OrderItem to the order.
+        /// </summary>
+        private void AddOrderItem(OrderItem item)
+        {
+            if (item == null)
+                throw new ArgumentException("OrderItem cannot be null.");
+            if (orderItems.Contains(item))
+                throw new ArgumentException("OrderItem already exists in the order.");
+            orderItems.Add(item);
+        }
+
+        /// <summary>
+        /// Removes an OrderItem from the order.
+        /// </summary>
+        public void RemoveOrderItem(OrderItem item)
+        {
+            if (item == null)
+                throw new ArgumentException("OrderItem cannot be null.");
+            if (!orderItems.Contains(item))
+                throw new ArgumentException("OrderItem not found in the order.");
+            orderItems.Remove(item);
+            // Since OrderItem is part of Order, removing it from the list suffices
+            // No need to perform further cleanup as OrderItem cannot exist independently
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Order other)
@@ -203,9 +231,6 @@ namespace BYT_Assignment_3.Models
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(OrderID, OrderDate, Notes, DiscountCode, Table);
