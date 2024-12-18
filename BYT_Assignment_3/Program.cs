@@ -41,7 +41,7 @@ namespace BYT_Assignment_3
                 switch (input)
                 {
                     case "1":
-                        ManageCustomers();
+                        ManageBartenders();
                         break;
                     case "2":
                         ManageBartenders();
@@ -80,84 +80,6 @@ namespace BYT_Assignment_3
             }
         }
 
-        #region Customer Management
-
-        static void ManageCustomers()
-        {
-            bool back = false;
-            while (!back)
-            {
-                Console.Clear();
-                Console.WriteLine("----- Manage Customers -----");
-                Console.WriteLine("1. Add Customer");
-                Console.WriteLine("2. List Customers");
-                Console.WriteLine("0. Back to Main Menu");
-                Console.Write("Select an option: ");
-
-                string input = Console.ReadLine();
-                Console.WriteLine();
-
-                switch (input)
-                {
-                    case "1":
-                        AddCustomer();
-                        break;
-                    case "2":
-                        ListCustomers();
-                        break;
-                    case "0":
-                        back = true;
-                        break;
-                    default:
-                        Console.WriteLine("Invalid option. Press any key to try again.");
-                        Console.ReadKey();
-                        break;
-                }
-            }
-        }
-
-        static void AddCustomer()
-        {
-            try
-            {
-                Console.WriteLine("----- Add New Customer -----");
-                int customerID = PromptForInt("Enter Customer ID: ");
-                string name = PromptForString("Enter Name: ");
-                string email = PromptForString("Enter Email: ");
-                string phoneNumber = PromptForString("Enter Phone Number: ");
-
-                var customer = new Customer(customerID, name, email, phoneNumber);
-                Console.WriteLine("Customer added successfully!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error adding customer: {ex.Message}");
-            }
-            finally
-            {
-                PromptToContinue();
-            }
-        }
-
-        static void ListCustomers()
-        {
-            Console.WriteLine("----- List of Customers -----");
-            var customers = Customer.GetAll();
-            if (customers.Count == 0)
-            {
-                Console.WriteLine("No customers found.");
-            }
-            else
-            {
-                foreach (var customer in customers)
-                {
-                    Console.WriteLine($"ID: {customer.CustomerID}, Name: {customer.Name}, Email: {customer.Email}, Phone: {customer.PhoneNumber}");
-                }
-            }
-            PromptToContinue();
-        }
-
-        #endregion
 
         #region Bartender Management
 

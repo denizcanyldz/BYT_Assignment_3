@@ -22,12 +22,8 @@ namespace Tests.ModelsTests
         {
             // Reset all class extents to ensure no residual data from previous tests
             Feedback.SetAll(new List<Feedback>());
-            
-            // Ensure the test file does not exist before each test
-            if (File.Exists(TestFilePath))
-            {
-                File.Delete(TestFilePath);
-            }
+            Customer.SetAll(new List<Customer>());
+            Restaurant.SetAll(new List<Restaurant>());
         }
 
         /// <summary>
@@ -56,28 +52,28 @@ namespace Tests.ModelsTests
         public void Feedback_CreatesObjectCorrectly_WithMandatoryAttributes()
         {
             // Arrange
-            var feedback = new Feedback(1, 1001, 5, DateTime.Now.AddDays(-1), "Excellent service!");
+            var restaurant = new Restaurant(1, "Gourmet Hub", "123 Culinary St.", "555-1234");
+            var customer = new Customer(1, "Emily Clark", "555-2468");
 
-            // Act & Assert
+            // Act
+            var feedback = new Feedback(
+                feedbackID: 1,
+                content: "Excellent service!",
+                feedbackDate: DateTime.Now.AddDays(-1),
+                rating: 5,
+                restaurant: restaurant,
+                customer: customer,
+                response: "Thank you for your feedback!"
+            );
+
+            // Assert
             Assert.AreEqual(1, feedback.FeedbackID, "FeedbackID should be set correctly.");
-            Assert.AreEqual(1001, feedback.CustomerID, "CustomerID should be set correctly.");
+            Assert.AreEqual("Excellent service!", feedback.Content, "Content should be set correctly.");
             Assert.AreEqual(5, feedback.Rating, "Rating should be set correctly.");
-            Assert.LessOrEqual(feedback.DateTime, DateTime.Now, "DateTime should not be in the future.");
-            Assert.AreEqual("Excellent service!", feedback.Comments, "Comments should be set correctly.");
-        }
-
-        /// <summary>
-        /// Tests that creating a Feedback with an invalid CustomerID throws an ArgumentException.
-        /// </summary>
-        [Test]
-        public void Feedback_InvalidCustomerID_ShouldThrowException()
-        {
-            // Arrange
-            var invalidCustomerID = 0;
-
-            // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => new Feedback(2, invalidCustomerID, 4, DateTime.Now.AddDays(-2), "Good."));
-            Assert.AreEqual("CustomerID must be positive.", ex.Message, "Exception message should indicate invalid CustomerID.");
+            Assert.LessOrEqual(feedback.FeedbackDate, DateTime.Now, "FeedbackDate should not be in the future.");
+            Assert.AreEqual("Thank you for your feedback!", feedback.Response, "Response should be set correctly.");
+            Assert.AreEqual(customer, feedback.Customer, "Feedback's Customer should be correctly set.");
+            Assert.AreEqual(restaurant, feedback.Restaurant, "Feedback's Restaurant should be correctly set.");
         }
 
         /// <summary>
@@ -87,185 +83,259 @@ namespace Tests.ModelsTests
         public void Feedback_InvalidRating_ShouldThrowException()
         {
             // Arrange
-            var invalidRatings = new List<int> { 0, 6 };
+            var restaurant = new Restaurant(2, "Spice Symphony", "789 Aroma Blvd.", "555-1357");
+            var customer = new Customer(2, "Michael Scott", "555-9753");
 
-            foreach (var invalidRating in invalidRatings)
+            // Act & Assert
+            var exLow = Assert.Throws<ArgumentException>(() =>
+                new Feedback(2, "Poor service.", DateTime.Now.AddDays(-2), 0, restaurant, customer));
+            Assert.That(exLow.Message, Is.EqualTo("Rating must be between 1 and 5."));
+
+            var exHigh = Assert.Throws<ArgumentException>(() =>
+                new Feedback(3, "Outstanding!", DateTime.Now.AddDays(-3), 6, restaurant, customer));
+            Assert.That(exHigh.Message, Is.EqualTo("Rating must be between 1 and 5."));
+        }
+
+        /// <summary>
+        /// Tests that creating a Feedback with a future FeedbackDate throws an ArgumentException.
+        /// </summary>
+        [Test]
+        public void Feedback_FutureFeedbackDate_ShouldThrowException()
+        {
+            // Arrange
+            var restaurant = new Restaurant(3, "Herbal Haven", "321 Greenway Rd.", "555-8642");
+            var customer = new Customer(3, "Dwight Schrute", "555-1122");
+
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(() =>
+                new Feedback(4, "Great ambiance.", DateTime.Now.AddDays(1), 4, restaurant, customer)
+            );
+            Assert.That(ex.Message, Is.EqualTo("FeedbackDate cannot be in the future."));
+        }
+
+        /// <summary>
+        /// Tests that creating a Feedback with empty or whitespace Content throws an ArgumentException.
+        /// </summary>
+        [Test]
+        public void Feedback_EmptyOrWhitespaceContent_ShouldThrowException()
+        {
+            // Arrange
+            var restaurant = new Restaurant(4, "The Culinary Spot", "456 Flavor Ave.", "555-6789");
+            var customer = new Customer(4, "John Doe", "555-6789");
+
+            var invalidContents = new List<string> { "", "   ", "\t", "\n" };
+
+            foreach (var invalidContent in invalidContents)
             {
                 // Act & Assert
-                var ex = Assert.Throws<ArgumentException>(() => new Feedback(3, 1002, invalidRating, DateTime.Now.AddDays(-3), "Average."));
-                Assert.AreEqual("Rating must be between 1 and 5.", ex.Message, "Exception message should indicate invalid Rating.");
+                var ex = Assert.Throws<ArgumentException>(() =>
+                    new Feedback(5, invalidContent, DateTime.Now.AddDays(-4), 3, restaurant, customer)
+                );
+                Assert.That(ex.Message, Is.EqualTo("Content cannot be null or empty."));
             }
         }
 
         /// <summary>
-        /// Tests that creating a Feedback with a future DateTime throws an ArgumentException.
+        /// Tests that creating a Feedback with Content exceeding 500 characters throws an ArgumentException.
         /// </summary>
         [Test]
-        public void Feedback_FutureDateTime_ShouldThrowException()
+        public void Feedback_ExceedsContentLength_ShouldThrowException()
         {
             // Arrange
-            var futureDateTime = DateTime.Now.AddDays(1);
+            var restaurant = new Restaurant(5, "Flavor Fiesta", "789 Spice St.", "555-2468");
+            var customer = new Customer(5, "Jim Halpert", "555-1357");
+
+            var longContent = new string('A', 501); // 501 characters
 
             // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => new Feedback(4, 1003, 3, futureDateTime, "Okay."));
-            Assert.AreEqual("DateTime cannot be in the future.", ex.Message, "Exception message should indicate invalid DateTime.");
+            var ex = Assert.Throws<ArgumentException>(() =>
+                new Feedback(6, longContent, DateTime.Now.AddDays(-5), 4, restaurant, customer)
+            );
+            Assert.That(ex.Message, Is.EqualTo("Content length cannot exceed 500 characters."));
         }
 
         /// <summary>
-        /// Tests that creating a Feedback with Comments exceeding 500 characters throws an ArgumentException.
-        /// </summary>
-        [Test]
-        public void Feedback_ExceedsCommentsLength_ShouldThrowException()
-        {
-            // Arrange
-            var longComments = new string('A', 501); // 501 characters
-
-            // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => new Feedback(5, 1004, 4, DateTime.Now.AddDays(-4), longComments));
-            Assert.AreEqual("Comments length cannot exceed 500 characters.", ex.Message, "Exception message should indicate excessive Comments length.");
-        }
-
-        /// <summary>
-        /// Tests that creating a Feedback with empty or whitespace Comments throws an ArgumentException.
-        /// </summary>
-        [Test]
-        public void Feedback_EmptyOrWhitespaceComments_ShouldThrowException()
-        {
-            // Arrange
-            var invalidCommentsList = new List<string?> { "", "   ", "\t", "\n" };
-
-            foreach (var invalidComments in invalidCommentsList)
-            {
-                // Act & Assert
-                var ex = Assert.Throws<ArgumentException>(() => new Feedback(6, 1005, 2, DateTime.Now.AddDays(-5), invalidComments));
-                Assert.AreEqual("Comments cannot be empty or whitespace.", ex.Message, "Exception message should indicate invalid Comments.");
-            }
-        }
-
-        /// <summary>
-        /// Tests that adding a Feedback to the class extent increases the TotalFeedbacks count.
+        /// Tests that adding a Feedback increases the TotalFeedbacks count and includes it in the extent.
         /// </summary>
         [Test]
         public void Feedback_AddingFeedback_ShouldIncreaseTotalFeedbacks()
         {
             // Arrange
+            var restaurant = new Restaurant(6, "Spice Symphony", "789 Aroma Blvd.", "555-1357");
+            var customer = new Customer(6, "Pam Beesly", "555-8642");
+
             var initialCount = Feedback.TotalFeedbacks;
 
-            var feedback = new Feedback(7, 1006, 5, DateTime.Now.AddDays(-6), "Outstanding!");
+            var feedback = new Feedback(
+                feedbackID: 7,
+                content: "Loved the desserts!",
+                feedbackDate: DateTime.Now.AddDays(-6),
+                rating: 5,
+                restaurant: restaurant,
+                customer: customer,
+                response: "Thank you! We're glad you enjoyed our desserts."
+            );
 
             // Act & Assert
             Assert.AreEqual(initialCount + 1, Feedback.TotalFeedbacks, "TotalFeedbacks should increment by one.");
-            Assert.Contains(feedback, (System.Collections.ICollection)Feedback.GetAll(), "Feedback should be added to the extent.");
-        }
-
-        /// <summary>
-        /// Tests that the AverageRating property calculates correctly.
-        /// </summary>
-        [Test]
-        public void Feedback_AverageRating_ShouldCalculateCorrectly()
-        {
-            // Arrange
-            var feedback1 = new Feedback(8, 1007, 4, DateTime.Now.AddDays(-7), "Good.");
-            var feedback2 = new Feedback(9, 1008, 5, DateTime.Now.AddDays(-8), "Excellent.");
-            var feedback3 = new Feedback(10, 1009, 3, DateTime.Now.AddDays(-9), "Average.");
-
-            var expectedAverage = (4 + 5 + 3) / 3.0;
-
-            // Act
-            var actualAverage = Feedback.AverageRating;
-
-            // Assert
-            Assert.AreEqual(expectedAverage, actualAverage, "AverageRating should be calculated correctly.");
-        }
-
-        /// <summary>
-        /// Tests that setting the Feedback extent to null initializes it as an empty list.
-        /// </summary>
-        [Test]
-        public void SetAll_Null_ShouldInitializeEmptyExtent()
-        {
-            // Act
-            Feedback.SetAll(null);
-
-            // Assert
-            Assert.AreEqual(0, Feedback.TotalFeedbacks, "TotalFeedbacks should be 0 after setting null.");
-            Assert.IsEmpty(Feedback.GetAll(), "Feedback extent should be empty after setting null.");
-        }
-
-        /// <summary>
-        /// Tests that the Feedback's Equals and GetHashCode methods function correctly.
-        /// </summary>
-        [Test]
-        public void Feedback_EqualsAndHashCode_ShouldFunctionCorrectly()
-        {
-            // Arrange
-            var fixedDate = new DateTime(2023, 10, 10, 12, 0, 0); // Fixed DateTime
-            var feedback1 = new Feedback(14, 1013, 5, fixedDate, "Outstanding!");
-            var feedback2 = new Feedback(14, 1013, 5, fixedDate, "Outstanding!");
-            var feedback3 = new Feedback(15, 1014, 3, fixedDate.AddDays(1), "Average."); // Different DateTime
-
-            // Act & Assert
-            Assert.IsTrue(feedback1.Equals(feedback2), "Feedbacks with identical properties should be equal.");
-            Assert.AreEqual(feedback1.GetHashCode(), feedback2.GetHashCode(), "HashCodes of identical feedbacks should be equal.");
-
-            Assert.IsFalse(feedback1.Equals(feedback3), "Feedbacks with different properties should not be equal.");
-            Assert.AreNotEqual(feedback1.GetHashCode(), feedback3.GetHashCode(), "HashCodes of different feedbacks should not be equal.");
-        }
-
-
-        /// <summary>
-        /// Tests that the AverageRating property returns 0 when there are no feedback entries.
-        /// </summary>
-        [Test]
-        public void AverageRating_NoFeedbacks_ShouldReturnZero()
-        {
-            // Arrange
-            // No feedback entries added
-
-            // Act
-            var average = Feedback.AverageRating;
-
-            // Assert
-            Assert.AreEqual(0.0, average, "AverageRating should be 0 when there are no feedbacks.");
-        }
-
-        /// <summary>
-        /// Tests that the AverageRating property calculates correctly with multiple feedback entries.
-        /// </summary>
-        [Test]
-        public void AverageRating_WithFeedbacks_ShouldCalculateCorrectly()
-        {
-            // Arrange
-            var feedback1 = new Feedback(16, 1015, 4, DateTime.Now.AddDays(-12), "Good.");
-            var feedback2 = new Feedback(17, 1016, 5, DateTime.Now.AddDays(-13), "Excellent.");
-            var feedback3 = new Feedback(18, 1017, 3, DateTime.Now.AddDays(-14), "Average.");
-
-            var expectedAverage = (4 + 5 + 3) / 3.0;
-
-            // Act
-            var actualAverage = Feedback.AverageRating;
-
-            // Assert
-            Assert.AreEqual(expectedAverage, actualAverage, "AverageRating should be calculated correctly.");
-        }
-
-        /// <summary>
-        /// Tests that adding a Feedback with Comments set to null does not throw an exception.
-        /// </summary>
-        [Test]
-        public void Feedback_NullComments_ShouldAddSuccessfully()
-        {
-            // Arrange
-            var feedback = new Feedback(19, 1018, 4, DateTime.Now.AddDays(-15), null);
-
-            // Act & Assert
-            Assert.AreEqual(null, feedback.Comments, "Comments should be null.");
-            Assert.AreEqual(1, Feedback.TotalFeedbacks, "TotalFeedbacks should be incremented.");
             CollectionAssert.Contains(Feedback.GetAll(), feedback, "Feedback should be added to the extent.");
         }
 
-        #endregion
 
-        // ... (Other tests for different classes can be placed here)
+        /// <summary>
+        /// Tests that updating a Feedback replaces the old one with the new one correctly.
+        /// </summary>
+        [Test]
+        public void Feedback_UpdateFeedback_ShouldReplaceOldWithNew()
+        {
+            // Arrange
+            var restaurant = new Restaurant(8, "Herbal Haven", "321 Greenway Rd.", "555-8642");
+            var customer = new Customer(8, "Kevin Malone", "555-1122");
+
+            var feedbackOld = new Feedback(
+                feedbackID: 9,
+                content: "Decent experience.",
+                feedbackDate: DateTime.Now.AddDays(-8),
+                rating: 3,
+                restaurant: restaurant,
+                customer: customer,
+                response: null
+            );
+
+            var feedbackNew = new Feedback(
+                feedbackID: 10,
+                content: "Improved service!",
+                feedbackDate: DateTime.Now.AddDays(-9),
+                rating: 4,
+                restaurant: restaurant,
+                customer: customer,
+                response: "Thank you for noticing the improvements!"
+            );
+
+            // Act
+            customer.UpdateFeedback(feedbackOld, feedbackNew);
+
+            // Assert
+            CollectionAssert.DoesNotContain(customer.Feedbacks, feedbackOld,
+                "Old Feedback should be removed from Customer's Feedbacks.");
+            CollectionAssert.Contains(customer.Feedbacks, feedbackNew,
+                "New Feedback should be added to Customer's Feedbacks.");
+            Assert.AreEqual(customer, feedbackNew.Customer, "New Feedback's Customer should be correctly set.");
+            Assert.AreEqual(restaurant, feedbackNew.Restaurant, "New Feedback's Restaurant should be correctly set.");
+        }
+
+        /// <summary>
+        /// Tests that adding a duplicate Feedback throws an ArgumentException.
+        /// </summary>
+        [Test]
+        public void Feedback_AddDuplicateFeedback_ShouldThrowException()
+        {
+            // Arrange
+            var restaurant = new Restaurant(9, "Flavor Fiesta", "789 Spice St.", "555-2468");
+            var customer = new Customer(9, "Stanley Hudson", "555-1357");
+
+            var feedback = new Feedback(
+                feedbackID: 11,
+                content: "Loved the appetizers!",
+                feedbackDate: DateTime.Now.AddDays(-10),
+                rating: 5,
+                restaurant: restaurant,
+                customer: customer,
+                response: "Glad you enjoyed them!"
+            );
+
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(() => customer.AddFeedback(feedback));
+            Assert.That(ex.Message, Is.EqualTo("Feedback already exists in the Customer."));
+        }
+
+        /// <summary>
+        /// Tests that removing a non-existent Feedback throws an ArgumentException.
+        /// </summary>
+        [Test]
+        public void Feedback_RemoveNonExistentFeedback_ShouldThrowException()
+        {
+            // Arrange
+            var restaurant = new Restaurant(10, "Spice Symphony", "789 Aroma Blvd.", "555-1357");
+            var customer = new Customer(10, "Toby Flenderson", "555-8642");
+
+            var feedback = new Feedback(
+                feedbackID: 12,
+                content: "Good ambiance.",
+                feedbackDate: DateTime.Now.AddDays(-11),
+                rating: 4,
+                restaurant: restaurant,
+                customer: customer,
+                response: null
+            );
+
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(() => customer.RemoveFeedback(feedback));
+            Assert.That(ex.Message, Is.EqualTo("Feedback not found in the Customer."));
+        }
+
+        /// <summary>
+        /// Tests that a Feedback associates correctly with a Customer.
+        /// </summary>
+        [Test]
+        public void Feedback_AssociatesWithCustomer_Correctly()
+        {
+            // Arrange
+            var restaurant = new Restaurant(11, "Gourmet Hub", "123 Culinary St.", "555-1234");
+            var customer = new Customer(11, "Kelly Kapoor", "555-6789");
+
+            var feedback = new Feedback(
+                feedbackID: 13,
+                content: "Exceptional desserts!",
+                feedbackDate: DateTime.Now.AddDays(-12),
+                rating: 5,
+                restaurant: restaurant,
+                customer: customer,
+                response: "Thank you! We're delighted you enjoyed them."
+            );
+
+            // Act & Assert
+            Assert.Contains(feedback, (System.Collections.ICollection)customer.Feedbacks,
+                "Feedback should be in Customer's Feedbacks list.");
+            Assert.AreEqual(customer, feedback.Customer, "Feedback's Customer should be correctly set.");
+        }
+
+       
+
+        /// <summary>
+        /// Tests that setting a Feedback's Customer updates the association correctly.
+        /// </summary>
+        [Test]
+        public void Feedback_SetCustomer_ShouldUpdateAssociation()
+        {
+            // Arrange
+            var restaurant = new Restaurant(13, "Herbal Haven", "321 Greenway Rd.", "555-8642");
+            var customer1 = new Customer(13, "Meredith Palmer", "555-1122");
+            var customer2 = new Customer(14, "Oscar Martinez", "555-3344");
+
+            var feedback = new Feedback(
+                feedbackID: 15,
+                content: "Loved the herbal teas!",
+                feedbackDate: DateTime.Now.AddDays(-14),
+                rating: 5,
+                restaurant: restaurant,
+                customer: customer1,
+                response: "Thank you! We're happy you enjoyed our teas."
+            );
+
+            // Act
+            feedback.SetCustomer(customer2);
+
+            // Assert
+            Assert.IsFalse(customer1.Feedbacks.Contains(feedback),
+                "Feedback should be removed from the old Customer's Feedbacks.");
+            Assert.IsTrue(customer2.Feedbacks.Contains(feedback),
+                "Feedback should be added to the new Customer's Feedbacks.");
+            Assert.AreEqual(customer2, feedback.Customer, "Feedback's Customer should be updated to the new Customer.");
+        }
+
+        
+
+        #endregion
     }
 }

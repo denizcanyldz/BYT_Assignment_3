@@ -167,8 +167,7 @@ namespace Tests.PersistenceTests
         public void SaveAll_ThenDeleteFile_LoadAll_ShouldInitializeEmptyExtents()
         {
             // Arrange
-            var customer = new Customer(1, "John Doe", "john@example.com", "1234567890");
-
+            var customer = new Customer(1, "Michael", "1234567890");
             // Act
             PersistencyManager.SaveAll(TestFilePath); // Save data
             Assert.IsTrue(File.Exists(TestFilePath), "Test file should exist after saving.");
