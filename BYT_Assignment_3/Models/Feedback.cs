@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
@@ -13,12 +13,12 @@ namespace BYT_Assignment_3.Models
         private static int totalFeedbacks = 0;
 
         /// <summary>
-        /// Gets the total number of feedback entries.
+        /// Gets or sets the total number of feedbacks.
         /// </summary>
         public static int TotalFeedbacks
         {
             get => totalFeedbacks;
-            private set
+            set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalFeedbacks cannot be negative.");
@@ -32,31 +32,11 @@ namespace BYT_Assignment_3.Models
         private static List<Feedback> feedbacks = new List<Feedback>();
 
         /// <summary>
-        /// Gets a read-only list of all feedback entries.
+        /// Gets a read-only list of all feedbacks.
         /// </summary>
         public static IReadOnlyList<Feedback> GetAll()
         {
             return feedbacks.AsReadOnly();
-        }
-
-        private static void ValidateFeedback(Feedback feedback)
-        {
-            if (feedback.CustomerID <= 0)
-                throw new ArgumentException("CustomerID must be positive.");
-    
-            if (feedback.Rating < 1 || feedback.Rating > 5)
-                throw new ArgumentException("Rating must be between 1 and 5.");
-    
-            if (feedback.DateTime > DateTime.Now)
-                throw new ArgumentException("DateTime cannot be in the future.");
-    
-            if (feedback.Comments != null)
-            {
-                if (string.IsNullOrWhiteSpace(feedback.Comments))
-                    throw new ArgumentException("Comments cannot be empty or whitespace.");
-                if (feedback.Comments.Length > 500)
-                    throw new ArgumentException("Comments length cannot exceed 500 characters.");
-            }
         }
 
         /// <summary>
@@ -65,38 +45,7 @@ namespace BYT_Assignment_3.Models
         public static void SetAll(List<Feedback> loadedFeedbacks)
         {
             feedbacks = loadedFeedbacks ?? new List<Feedback>();
-            TotalFeedbacks = 0; 
-
-            foreach (var feedback in feedbacks.ToList()) // Use a copy to allow safe removal
-            {
-                try
-                {
-                    ValidateFeedback(feedback);
-                    TotalFeedbacks++;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error adding Feedback (FeedbackID: {feedback.FeedbackID}): {ex.Message}");
-                    feedbacks.Remove(feedback); // Remove invalid feedback
-                    // Alternatively, rethrow or handle as per application requirements
-                    throw;
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Gets the average rating from all feedback entries.
-        /// </summary>
-        public static double AverageRating
-        {
-            get
-            {
-                if (feedbacks.Count == 0)
-                    return 0.0; 
-
-                return feedbacks.Average(fb => fb.Rating);
-            }
+            TotalFeedbacks = feedbacks.Count;
         }
 
         // -------------------------------
@@ -104,19 +53,35 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         public int FeedbackID { get; set; }
 
-        private int customerID;
+        private string content;
 
-        public int CustomerID
+        public string Content
         {
-            get => customerID;
+            get => content;
             set
             {
-                if (value <= 0)
-                    throw new ArgumentException("CustomerID must be positive.");
-                customerID = value;
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Content cannot be null or empty.");
+                content = value;
             }
         }
 
+        private DateTime feedbackDate;
+
+        public DateTime FeedbackDate
+        {
+            get => feedbackDate;
+            set
+            {
+                if (value > DateTime.Now)
+                    throw new ArgumentException("FeedbackDate cannot be in the future.");
+                feedbackDate = value;
+            }
+        }
+
+        // -------------------------------
+        // Optional Attributes
+        // -------------------------------
         private int rating;
 
         public int Rating
@@ -130,43 +95,49 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        private DateTime dateTime;
+        private string? response;
 
-        /// <summary>
-        /// Gets or sets the date and time of the feedback.
-        /// </summary>
-        public DateTime DateTime
+        public string? Response
         {
-            get => dateTime;
+            get => response;
             set
             {
-                if (value > DateTime.Now)
-                    throw new ArgumentException("DateTime cannot be in the future.");
-                dateTime = value;
+                if (!string.IsNullOrEmpty(value) && value.Length > 500)
+                    throw new ArgumentException("Response length cannot exceed 500 characters.");
+                response = value;
             }
         }
 
         // -------------------------------
-        // Optional Attributes
+        // Association Attributes
         // -------------------------------
-        private string? comments;
+        private Customer customer;
 
-        public string? Comments
+        [XmlIgnore]
+        public Customer Customer
         {
-            get => comments;
-            set
+            get => customer;
+            private set
             {
-                if (value != null)
-                {
-                    if (string.IsNullOrWhiteSpace(value))
-                        throw new ArgumentException("Comments cannot be empty or whitespace.");
-                    if (value.Length > 500)
-                        throw new ArgumentException("Comments length cannot exceed 500 characters.");
-                }
-                comments = value;
+                if (value == null)
+                    throw new ArgumentException("Customer cannot be null.");
+                customer = value;
             }
         }
 
+        private Restaurant restaurant;
+
+        [XmlIgnore]
+        public Restaurant Restaurant
+        {
+            get => restaurant;
+            private set
+            {
+                if (value == null)
+                    throw new ArgumentException("Restaurant cannot be null.");
+                restaurant = value;
+            }
+        }
 
         // -------------------------------
         // Constructors
@@ -174,13 +145,16 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the Feedback class with mandatory and optional attributes.
         /// </summary>
-        public Feedback(int feedbackID, int customerID, int rating, DateTime dateTime, string? comments = null)
+        public Feedback(int feedbackID, string content, DateTime feedbackDate, int rating, Restaurant restaurant, Customer customer, string? response = null)
         {
             FeedbackID = feedbackID;
-            CustomerID = customerID;
+            Content = content;
+            FeedbackDate = feedbackDate;
             Rating = rating;
-            DateTime = dateTime;
-            Comments = comments;
+            Response = response;
+
+            // Associate with Customer
+            SetCustomer(customer);
 
             // Add to class extent
             feedbacks.Add(this);
@@ -190,30 +164,78 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Feedback() { }
+        public Feedback()
+        {
+            // Initialize associations
+        }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
 
         /// <summary>
-        /// Determines whether the specified object is equal to the current Feedback.
+        /// Sets the Customer for the Feedback, maintaining bidirectional association.
         /// </summary>
+        public void SetCustomer(Customer newCustomer)
+        {
+            if (newCustomer == null)
+                throw new ArgumentNullException(nameof(newCustomer), "Customer cannot be null.");
+
+            if (this.customer != null && this.customer != newCustomer)
+            {
+                // Remove from the old customer's feedbacks
+                this.customer.RemoveFeedback(this);
+            }
+
+            this.customer = newCustomer;
+
+            // Add this feedback to the new customer's feedbacks if not already present
+            if (!newCustomer.Feedbacks.Contains(this))
+            {
+                newCustomer.AddFeedback(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Customer, maintaining bidirectional consistency.
+        /// </summary>
+        public void RemoveCustomer()
+        {
+            if (this.customer != null)
+            {
+                var oldCustomer = this.customer;
+                this.customer = null;
+
+                // Remove this feedback from the old customer's feedbacks
+                if (oldCustomer.Feedbacks.Contains(this))
+                {
+                    oldCustomer.RemoveFeedback(this);
+                }
+            }
+        }
+
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Feedback other)
             {
                 return FeedbackID == other.FeedbackID &&
-                       CustomerID == other.CustomerID &&
+                       Content == other.Content &&
+                       FeedbackDate == other.FeedbackDate &&
                        Rating == other.Rating &&
-                       DateTime == other.DateTime &&
-                       Comments == other.Comments;
+                       Response == other.Response &&
+                       Customer.Equals(other.Customer) &&
+                       Restaurant.Equals(other.Restaurant);
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(FeedbackID, CustomerID, Rating, DateTime, Comments);
+            return HashCode.Combine(FeedbackID, Content, FeedbackDate, Rating, Response, Customer, Restaurant);
         }
     }
 }

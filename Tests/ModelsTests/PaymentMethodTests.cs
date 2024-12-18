@@ -11,9 +11,8 @@ namespace Tests.ModelsTests
         [SetUp]
         public void Setup()
         {
-            // Initialize a PaymentMethod
-            paymentMethod = new PaymentMethod(paymentMethodID: 301, methodName: "Credit Card",
-                description: "Visa, MasterCard");
+            // Initialize a PaymentMethod using positional arguments
+            paymentMethod = new PaymentMethod(301, "Credit Card", "Visa, MasterCard");
 
             // Initialize a Payment
             payment = new Payment(
@@ -28,7 +27,7 @@ namespace Tests.ModelsTests
         [TearDown]
         public void Teardown()
         {
-            // Clean up class extents if necessary
+            // Reset class extents to ensure test isolation
             PaymentMethod.SetAll(new List<PaymentMethod>());
             Payment.SetAll(new List<Payment>());
         }
@@ -40,8 +39,9 @@ namespace Tests.ModelsTests
             paymentMethod.AddPayment(payment);
 
             // Assert
-            Assert.Contains(payment, (System.Collections.ICollection)paymentMethod.Payments);
-            Assert.AreEqual(paymentMethod, payment.PaymentMethod);
+            Assert.Contains(payment, (System.Collections.ICollection)paymentMethod.Payments,
+                "Payment should be in PaymentMethod's Payments list.");
+            Assert.AreEqual(paymentMethod, payment.PaymentMethod, "Payment's PaymentMethod should be correctly set.");
         }
 
         [Test]
@@ -49,18 +49,20 @@ namespace Tests.ModelsTests
         {
             // Arrange
             paymentMethod.AddPayment(payment);
-            Assert.Contains(payment, (System.Collections.ICollection)paymentMethod.Payments);
-            Assert.AreEqual(paymentMethod, payment.PaymentMethod);
+            Assert.Contains(payment, (System.Collections.ICollection)paymentMethod.Payments,
+                "Payment should be in PaymentMethod's Payments list.");
+            Assert.AreEqual(paymentMethod, payment.PaymentMethod, "Payment's PaymentMethod should be correctly set.");
 
             // Act
             paymentMethod.RemovePayment(payment);
 
             // Assert
-            Assert.IsFalse(paymentMethod.Payments.Contains(payment));
+            Assert.IsFalse(paymentMethod.Payments.Contains(payment),
+                "Payment should be removed from PaymentMethod's Payments list.");
             Assert.Throws<ArgumentException>(() =>
             {
                 var method = payment.PaymentMethod;
-            });
+            }, "Accessing PaymentMethod after removal should throw an exception.");
         }
 
         [Test]
@@ -80,9 +82,12 @@ namespace Tests.ModelsTests
             paymentMethod.UpdatePayment(payment, newPayment);
 
             // Assert
-            Assert.IsFalse(paymentMethod.Payments.Contains(payment));
-            Assert.IsTrue(paymentMethod.Payments.Contains(newPayment));
-            Assert.AreEqual(paymentMethod, newPayment.PaymentMethod);
+            Assert.IsFalse(paymentMethod.Payments.Contains(payment),
+                "Old Payment should be removed from PaymentMethod's Payments list.");
+            Assert.IsTrue(paymentMethod.Payments.Contains(newPayment),
+                "New Payment should be added to PaymentMethod's Payments list.");
+            Assert.AreEqual(paymentMethod, newPayment.PaymentMethod,
+                "New Payment's PaymentMethod should be correctly set.");
         }
 
         [Test]
@@ -92,7 +97,9 @@ namespace Tests.ModelsTests
             paymentMethod.AddPayment(payment);
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => paymentMethod.AddPayment(payment));
+            var duplicatePayment = payment;
+            Assert.Throws<ArgumentException>(() => paymentMethod.AddPayment(duplicatePayment),
+                "Adding a duplicate Payment should throw an exception.");
         }
 
         [Test]
@@ -108,7 +115,8 @@ namespace Tests.ModelsTests
             );
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => paymentMethod.RemovePayment(nonExistentPayment));
+            Assert.Throws<ArgumentException>(() => paymentMethod.RemovePayment(nonExistentPayment),
+                "Removing a non-existent Payment should throw an exception.");
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
+    [Serializable]
     public class Customer
     {
         // -------------------------------
@@ -12,12 +13,12 @@ namespace BYT_Assignment_3.Models
         private static int totalCustomers = 0;
 
         /// <summary>
-        /// Gets the total number of customers.
+        /// Gets or sets the total number of customers.
         /// </summary>
         public static int TotalCustomers
         {
             get => totalCustomers;
-            private set
+            set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalCustomers cannot be negative.");
@@ -41,14 +42,9 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Sets the entire customer list (used during deserialization).
         /// </summary>
-        /// <param name="loadedCustomers">List of customers to load.</param>
         public static void SetAll(List<Customer> loadedCustomers)
         {
-            customers.Clear();
-            if (loadedCustomers != null)
-            {
-                customers.AddRange(loadedCustomers);
-            }
+            customers = loadedCustomers ?? new List<Customer>();
             TotalCustomers = customers.Count;
         }
 
@@ -58,12 +54,13 @@ namespace BYT_Assignment_3.Models
         public int CustomerID { get; set; }
 
         private string name;
+
         public string Name
         {
             get => name;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Name cannot be null or empty.");
                 name = value;
             }
@@ -72,73 +69,98 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private string? email;
-        public string? Email
-        {
-            get => email;
-            set
-            {
-                if(!string.IsNullOrEmpty(value) && !IsValidEmail(value))
-                    throw new ArgumentException("Invalid email format.");
-                email = value;
-            }
-        }
+        private string? contactNumber;
 
-        private string? phoneNumber; // Made nullable
-        public string? PhoneNumber
+        public string? ContactNumber
         {
-            get => phoneNumber;
+            get => contactNumber;
             set
             {
-                if (value != null && !IsValidPhoneNumber(value))
-                    throw new ArgumentException("Invalid phone number format.");
-                phoneNumber = value;
+                if (!string.IsNullOrEmpty(value) && value.Length > 50)
+                    throw new ArgumentException("ContactNumber length cannot exceed 50 characters.");
+                contactNumber = value;
             }
         }
 
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        
-        [XmlArray("Reservations")]
-        [XmlArrayItem("Reservation")]
-        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        private readonly List<Reservation> reservations = new List<Reservation>();
+
+        [XmlIgnore] // Prevent direct serialization of the collection
+        public IReadOnlyList<Reservation> Reservations => reservations.AsReadOnly();
+
+        private readonly List<Feedback> feedbacks = new List<Feedback>();
+
+        [XmlIgnore]
+        public IReadOnlyList<Feedback> Feedbacks => feedbacks.AsReadOnly();
+
+        // -------------------------------
+        // Constructors
+        // -------------------------------
+        /// <summary>
+        /// Initializes a new instance of the Customer class with mandatory and optional attributes.
+        /// </summary>
+        public Customer(int customerID, string name, string? contactNumber = null)
+        {
+            CustomerID = customerID;
+            Name = name;
+            ContactNumber = contactNumber;
+
+            // Add to class extent and update total
+            customers.Add(this);
+            TotalCustomers = customers.Count;
+        }
 
         /// <summary>
-        /// Adds a Reservation to the Customer's list.
+        /// Parameterless constructor for serialization.
+        /// </summary>
+        public Customer()
+        {
+            // Initialize lists
+            reservations = new List<Reservation>();
+            feedbacks = new List<Feedback>();
+        }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+
+        /// <summary>
+        /// Adds a Reservation to the Customer.
         /// </summary>
         public void AddReservation(Reservation reservation)
         {
             if (reservation == null)
                 throw new ArgumentNullException(nameof(reservation), "Reservation cannot be null.");
-            if (!Reservations.Contains(reservation))
+            if (!reservations.Contains(reservation))
             {
-                Reservations.Add(reservation);
+                reservations.Add(reservation);
                 reservation.SetCustomer(this);
             }
         }
 
         /// <summary>
-        /// Removes a Reservation from the Customer's list.
+        /// Removes a Reservation from the Customer.
         /// </summary>
         public void RemoveReservation(Reservation reservation)
         {
-            if (reservation == null || !Reservations.Contains(reservation))
+            if (reservation == null || !reservations.Contains(reservation))
                 throw new ArgumentException("Reservation not found in the Customer.");
-            Reservations.Remove(reservation);
+            reservations.Remove(reservation);
             reservation.RemoveCustomer();
         }
 
         /// <summary>
-        /// Updates a Reservation in the Customer's list.
+        /// Updates a Reservation in the Customer.
         /// </summary>
         public void UpdateReservation(Reservation oldReservation, Reservation newReservation)
         {
             if (oldReservation == null || newReservation == null)
                 throw new ArgumentNullException("Reservation cannot be null.");
-            if (!Reservations.Contains(oldReservation))
+            if (!reservations.Contains(oldReservation))
                 throw new ArgumentException("Old Reservation not found in the Customer.");
-            if (Reservations.Contains(newReservation))
+            if (reservations.Contains(newReservation))
                 throw new ArgumentException("New Reservation already exists in the Customer.");
 
             // Remove old reservation
@@ -147,48 +169,49 @@ namespace BYT_Assignment_3.Models
             // Add new reservation
             AddReservation(newReservation);
         }
-        // -------------------------------
-        // Derived Attributes
-        // -------------------------------
-        [XmlIgnore]
-        public int TotalReservations => Reservations.Count;
 
-        // -------------------------------
-        // Constructors
-        // -------------------------------
         /// <summary>
-        /// Initializes a new instance of the Customer class with mandatory and optional attributes.
+        /// Adds a Feedback to the Customer.
         /// </summary>
-        public Customer(int customerID, string name, string? email = null, string? phoneNumber = null)
+        public void AddFeedback(Feedback feedback)
         {
-            CustomerID = customerID;
-            Name = name;
-            Email = email;
-            PhoneNumber = phoneNumber;
-
-            // Add to class extent
-            customers.Add(this);
-            TotalCustomers = customers.Count;
+            if (feedback == null)
+                throw new ArgumentNullException(nameof(feedback), "Feedback cannot be null.");
+            if (!feedbacks.Contains(feedback))
+            {
+                feedbacks.Add(feedback);
+                feedback.SetCustomer(this);
+            }
         }
 
         /// <summary>
-        /// Parameterless constructor for serialization.
+        /// Removes a Feedback from the Customer.
         /// </summary>
-        public Customer() { }
-
-        // -------------------------------
-        // Validation Helpers
-        // -------------------------------
-        private bool IsValidEmail(string email)
+        public void RemoveFeedback(Feedback feedback)
         {
-            // Simple email validation logic
-            return email.Contains("@") && email.Contains(".");
+            if (feedback == null || !feedbacks.Contains(feedback))
+                throw new ArgumentException("Feedback not found in the Customer.");
+            feedbacks.Remove(feedback);
+            feedback.RemoveCustomer();
         }
 
-        private bool IsValidPhoneNumber(string phone)
+        /// <summary>
+        /// Updates a Feedback in the Customer.
+        /// </summary>
+        public void UpdateFeedback(Feedback oldFeedback, Feedback newFeedback)
         {
-            // Simple phone number validation logic (e.g., length, numeric)
-            return phone.Length >= 7 && phone.Length <= 15 && long.TryParse(phone, out _);
+            if (oldFeedback == null || newFeedback == null)
+                throw new ArgumentNullException("Feedback cannot be null.");
+            if (!feedbacks.Contains(oldFeedback))
+                throw new ArgumentException("Old Feedback not found in the Customer.");
+            if (feedbacks.Contains(newFeedback))
+                throw new ArgumentException("New Feedback already exists in the Customer.");
+
+            // Remove old feedback
+            RemoveFeedback(oldFeedback);
+
+            // Add new feedback
+            AddFeedback(newFeedback);
         }
 
         // -------------------------------
@@ -200,15 +223,15 @@ namespace BYT_Assignment_3.Models
             {
                 return CustomerID == other.CustomerID &&
                        Name == other.Name &&
-                       Email == other.Email &&
-                       PhoneNumber == other.PhoneNumber;
+                       ContactNumber == other.ContactNumber;
+                // Excluding Reservations and Feedbacks for simplicity
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(CustomerID, Name, Email, PhoneNumber);
+            return HashCode.Combine(CustomerID, Name, ContactNumber);
         }
     }
 }
