@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -95,6 +96,23 @@ namespace BYT_Assignment_3.Models
         [XmlArrayItem("Specialty", IsNullable = true)]
         public List<string?> Specialties { get; set; } = new List<string?>();
 
+        // New: Collection of MenuItems prepared by the Chef
+        [XmlIgnore] // Prevent direct serialization to avoid circular references
+        public List<MenuItem> MenuItems { get; private set; } = new List<MenuItem>();
+
+        // For serialization purposes, convert the collection to a list of MenuItemIDs
+        [XmlArray("MenuItems")]
+        [XmlArrayItem("MenuItemID")]
+        public List<int> MenuItemIDs
+        {
+            get => MenuItems.Select(mi => mi.MenuItemID).ToList();
+            set
+            {
+                // This property is used during deserialization to associate MenuItems
+                // The actual MenuItem objects should be linked after all objects are deserialized
+            }
+        }
+
         /// <summary>
         /// Adds a specialty to the chef's specialties list.
         /// </summary>
@@ -119,6 +137,36 @@ namespace BYT_Assignment_3.Models
             if (!Specialties.Contains(specialty))
                 throw new ArgumentException("Specialty not found.");
             Specialties.Remove(specialty);
+        }
+
+        /// <summary>
+        /// Adds a MenuItem to the chef's collection.
+        /// </summary>
+        /// <param name="menuItem">The MenuItem to add.</param>
+        public void AddMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            if (MenuItems.Contains(menuItem))
+                throw new ArgumentException("MenuItem already exists for this chef.");
+
+            MenuItems.Add(menuItem);
+            menuItem.SetChef(this); // Ensure bidirectional association
+        }
+
+        /// <summary>
+        /// Removes a MenuItem from the chef's collection.
+        /// </summary>
+        /// <param name="menuItem">The MenuItem to remove.</param>
+        public void RemoveMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            if (!MenuItems.Contains(menuItem))
+                throw new ArgumentException("MenuItem not found for this chef.");
+
+            MenuItems.Remove(menuItem);
+            menuItem.RemoveChef(); // Ensure bidirectional association
         }
 
         // -------------------------------
@@ -153,6 +201,7 @@ namespace BYT_Assignment_3.Models
         public Chef() : base()
         {
             Specialties = new List<string?>();
+            MenuItems = new List<MenuItem>();
         }
 
         // -------------------------------

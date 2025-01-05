@@ -78,19 +78,8 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes
         // -------------------------------
-        private int inventoryID;
-
         [XmlElement("InventoryID")]
-        public int InventoryID
-        {
-            get => inventoryID;
-            private set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("InventoryID must be positive.");
-                inventoryID = value;
-            }
-        }
+        public int InventoryID { get; private set; }
 
         private DateTime lastRestockDate;
 
@@ -137,9 +126,13 @@ namespace BYT_Assignment_3.Models
             if (ingredient == null)
                 throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
 
+            if (ingredient.ParentInventory != null)
+                throw new InvalidOperationException("This Ingredient is already assigned to an Inventory.");
+
             if (!ingredients.Contains(ingredient))
             {
                 ingredients.Add(ingredient);
+                ingredient.SetParentInventory(this);
             }
             else
             {
@@ -156,12 +149,18 @@ namespace BYT_Assignment_3.Models
             if (ingredient == null)
                 throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
 
-            if (!ingredients.Remove(ingredient))
+            if (ingredients.Contains(ingredient))
+            {
+                ingredients.Remove(ingredient);
+                ingredient.SetParentInventory(null);
+                ingredient.RemoveFromExtent(); // Remove from Ingredient class's static list
+            }
+            else
             {
                 throw new ArgumentException("Ingredient not found in the inventory.");
             }
         }
-        
+
         /// <summary>
         /// Updates an existing Ingredient in the Inventory.
         /// </summary>
@@ -171,6 +170,8 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentNullException("Ingredient cannot be null.");
             if (!ingredients.Contains(oldIngredient))
                 throw new ArgumentException("Old Ingredient not found in the Inventory.");
+            if (newIngredient.ParentInventory != null && newIngredient.ParentInventory != this)
+                throw new InvalidOperationException("New Ingredient is already assigned to another Inventory.");
             if (ingredients.Contains(newIngredient))
                 throw new ArgumentException("New Ingredient already exists in the Inventory.");
 
@@ -188,6 +189,63 @@ namespace BYT_Assignment_3.Models
         /// Gets the total number of items in the inventory.
         /// </summary>
         public int TotalItems => ingredients.Count;
+
+        // -------------------------------
+        // One-to-One Relationship Attribute
+        // -------------------------------
+        private Restaurant? restaurant;
+
+        /// <summary>
+        /// Gets the Restaurant that manages this Inventory.
+        /// </summary>
+        public Restaurant? Restaurant
+        {
+            get => restaurant;
+            private set
+            {
+                restaurant = value;
+            }
+        }
+
+        // -------------------------------
+        // Composition Methods
+        // -------------------------------
+        /// <summary>
+        /// Internal method to set the Restaurant without causing recursion.
+        /// </summary>
+        /// <param name="restaurant">The Restaurant to set.</param>
+        internal void SetRestaurantInternal(Restaurant? restaurant)
+        {
+            this.Restaurant = restaurant;
+        }
+
+        /// <summary>
+        /// Removes the Restaurant association from this Inventory.
+        /// </summary>
+        internal void RemoveRestaurant()
+        {
+            this.Restaurant = null;
+        }
+
+        /// <summary>
+        /// Removes the Inventory and all its associated Ingredients from the class extent.
+        /// </summary>
+        public void RemoveFromExtent()
+        {
+            lock (inventoryLock)
+            {
+                // Remove all associated Ingredients
+                foreach (var ingredient in ingredients.ToList()) // Use a copy to avoid modification during iteration
+                {
+                    RemoveIngredient(ingredient);
+                    // ingredient.RemoveFromExtent() is already called within RemoveIngredient
+                }
+
+                // Remove the Inventory itself
+                inventories.Remove(this);
+                TotalInventories = inventories.Count;
+            }
+        }
 
         // -------------------------------
         // Constructors
@@ -210,7 +268,6 @@ namespace BYT_Assignment_3.Models
                 TotalInventories = inventories.Count;
             }
         }
-
 
         /// <summary>
         /// Parameterless constructor for serialization.

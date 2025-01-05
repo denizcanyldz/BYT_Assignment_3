@@ -14,12 +14,12 @@ namespace BYT_Assignment_3.Models
         private static int totalOrders = 0;
 
         /// <summary>
-        /// Gets or sets the total number of orders.
+        /// Gets the total number of orders.
         /// </summary>
         public static int TotalOrders
         {
             get => totalOrders;
-            set
+            private set
             {
                 if (value < 0)
                     throw new ArgumentException("TotalOrders cannot be negative.");
@@ -45,15 +45,18 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public static void SetAll(List<Order> loadedOrders)
         {
-            orders = loadedOrders ?? new List<Order>();
+            if (loadedOrders == null)
+                throw new ArgumentNullException(nameof(loadedOrders), "Loaded orders list cannot be null.");
+
+            orders = loadedOrders;
             TotalOrders = orders.Count;
         }
 
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        
         private int orderID;
+
         public int OrderID
         {
             get => orderID;
@@ -124,12 +127,20 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
-        // Multi-Value Attributes
+        // Composition Attributes
         // -------------------------------
         private List<OrderItem> orderItems = new List<OrderItem>();
 
-        [XmlIgnore] // Prevent direct serialization of the collection
+        [XmlIgnore]
         public IReadOnlyList<OrderItem> OrderItems => orderItems.AsReadOnly();
+
+        // -------------------------------
+        // Association Attributes
+        // -------------------------------
+        private List<Payment> payments = new List<Payment>();
+
+        [XmlIgnore]
+        public IReadOnlyList<Payment> Payments => payments.AsReadOnly();
 
         // -------------------------------
         // Derived Attributes
@@ -165,6 +176,7 @@ namespace BYT_Assignment_3.Models
         {
             // Initialize lists if necessary
             orderItems = new List<OrderItem>();
+            payments = new List<Payment>();
         }
 
         // -------------------------------
@@ -183,21 +195,24 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public OrderItem CreateOrderItem(int orderItemID, string itemName, int quantity, double price, string? specialInstructions = null)
         {
-            var orderItem = new OrderItem(orderItemID, itemName, quantity, price, specialInstructions);
-            AddOrderItem(orderItem);
+            var orderItem = new OrderItem(orderItemID, itemName, quantity, price, specialInstructions, this);
             return orderItem;
         }
 
         /// <summary>
         /// Adds an existing OrderItem to the order.
         /// </summary>
-        private void AddOrderItem(OrderItem item)
+        public void AddOrderItem(OrderItem item)
         {
             if (item == null)
                 throw new ArgumentException("OrderItem cannot be null.");
             if (orderItems.Contains(item))
                 throw new ArgumentException("OrderItem already exists in the order.");
+            if (item.ParentOrder != null && item.ParentOrder != this)
+                throw new ArgumentException("OrderItem already belongs to another Order.");
+
             orderItems.Add(item);
+            item.SetParentOrder(this);
         }
 
         /// <summary>
@@ -210,8 +225,75 @@ namespace BYT_Assignment_3.Models
             if (!orderItems.Contains(item))
                 throw new ArgumentException("OrderItem not found in the order.");
             orderItems.Remove(item);
-            // Since OrderItem is part of Order, removing it from the list suffices
-            // No need to perform further cleanup as OrderItem cannot exist independently
+            item.RemoveParentOrder();
+            item.RemoveFromExtent(); // Remove from class extent
+        }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+         /// <summary>
+        /// Adds a Payment to the order, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="payment">The Payment to add.</param>
+        /// <param name="callPaymentSetOrder">Flag to prevent infinite recursion.</param>
+        public void AddPayment(Payment payment, bool callPaymentSetOrder = true)
+        {
+            if (payment == null)
+                throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
+            if (payments.Contains(payment))
+                throw new ArgumentException("Payment already exists in the order.");
+            if (payment.Order != null && payment.Order != this)
+                throw new ArgumentException("Payment already belongs to another Order.");
+            if (payment.PaymentMethod == null)
+                throw new ArgumentException("PaymentMethod must be set before adding to Order.");
+
+            payments.Add(payment);
+
+            if (callPaymentSetOrder)
+            {
+                payment.SetOrder(this, false); // Prevent recursion
+            }
+        }
+
+        /// <summary>
+        /// Removes a Payment from the order, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="payment">The Payment to remove.</param>
+        /// <param name="callPaymentRemoveOrder">Flag to prevent infinite recursion.</param>
+        public void RemovePayment(Payment payment, bool callPaymentRemoveOrder = true)
+        {
+            if (payment == null)
+                throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
+            if (!payments.Contains(payment))
+                throw new ArgumentException("Payment not found in the order.");
+            payments.Remove(payment);
+
+            if (callPaymentRemoveOrder)
+            {
+                payment.RemoveOrder(false); // Prevent recursion
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing Payment with a new Payment in the order.
+        /// </summary>
+        /// <param name="oldPayment">The Payment to be replaced.</param>
+        /// <param name="newPayment">The new Payment to replace with.</param>
+        public void UpdatePayment(Payment oldPayment, Payment newPayment)
+        {
+            if (oldPayment == null || newPayment == null)
+                throw new ArgumentNullException("Payments cannot be null.");
+            if (!payments.Contains(oldPayment))
+                throw new ArgumentException("Old Payment not found in the order.");
+            if (payments.Contains(newPayment))
+                throw new ArgumentException("New Payment already exists in the order.");
+
+            // Remove old payment
+            RemovePayment(oldPayment);
+
+            // Add new payment
+            AddPayment(newPayment);
         }
 
         // -------------------------------
@@ -226,7 +308,7 @@ namespace BYT_Assignment_3.Models
                        Notes == other.Notes &&
                        DiscountCode == other.DiscountCode &&
                        Table.Equals(other.Table);
-                // Excluding OrderItems collection to simplify equality
+                // Excluding OrderItems and Payments collections to simplify equality
             }
             return false;
         }
@@ -235,5 +317,31 @@ namespace BYT_Assignment_3.Models
         {
             return HashCode.Combine(OrderID, OrderDate, Notes, DiscountCode, Table);
         }
+
+        // -------------------------------
+        // RemoveFromExtent Method
+        // -------------------------------
+        /// <summary>
+        /// Removes the Order and all its associated OrderItems and Payments from the class extent.
+        /// </summary>
+        public void RemoveFromExtent()
+        {
+            // Remove all associated OrderItems
+            foreach (var item in orderItems.ToList())
+            {
+                RemoveOrderItem(item);
+            }
+
+            // Remove all associated Payments
+            foreach (var payment in payments.ToList())
+            {
+                RemovePayment(payment);
+            }
+
+            // Remove from class extent
+            orders.Remove(this);
+            TotalOrders = orders.Count;
+        }
+
     }
 }

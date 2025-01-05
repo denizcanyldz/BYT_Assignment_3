@@ -99,95 +99,33 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        private List<Order> orders = new List<Order>();
+        // Qualified Association: DateTime -> Reservation
+        [XmlIgnore] // Prevent direct serialization of the dictionary
+        public Dictionary<DateTime, Reservation> Reservations { get; private set; } = new Dictionary<DateTime, Reservation>();
 
-        [XmlIgnore] // Prevent direct serialization of the collection
-        public IReadOnlyList<Order> Orders => orders.AsReadOnly();
-
-        /// <summary>
-        /// Adds an order to the table's order list.
-        /// </summary>
-        public void AddOrder(Order order)
+        // For serialization purposes, convert the dictionary to a list
+        [XmlArray("Reservations")]
+        [XmlArrayItem("Reservation")]
+        public List<Reservation> ReservationList
         {
-            if (order == null)
-                throw new ArgumentException("Order cannot be null.");
-            orders.Add(order);
-        }
-
-        /// <summary>
-        /// Removes an order from the table's order list.
-        /// </summary>
-        public void RemoveOrder(Order order)
-        {
-            if (order == null || !orders.Contains(order))
-                throw new ArgumentException("Order not found.");
-            orders.Remove(order);
+            get => Reservations.Values.ToList();
+            set
+            {
+                Reservations = new Dictionary<DateTime, Reservation>();
+                if (value != null)
+                {
+                    foreach (var reservation in value)
+                    {
+                        AddReservation(reservation);
+                    }
+                }
+            }
         }
 
         // -------------------------------
         // Derived Attributes
         // -------------------------------
-        public bool IsOccupied => orders.Count > 0;
-
-        private List<Reservation> reservations = new List<Reservation>();
-
-        [XmlIgnore]
-        public IReadOnlyList<Reservation> Reservations => reservations.AsReadOnly();
-
-        /// <summary>
-        /// Adds a Reservation to the Table.
-        /// Enforces unique ReservationDateTime per Table.
-        /// </summary>
-        public void AddReservation(Reservation reservation)
-        {
-            if (reservation == null)
-                throw new ArgumentException("Reservation cannot be null.");
-
-            // **Enforce uniqueness of ReservationDateTime**
-            if (reservations.Any(r => r.ReservationDateTime == reservation.ReservationDateTime))
-                throw new ArgumentException($"A reservation already exists at {reservation.ReservationDateTime} for this table.");
-
-            if (!reservations.Contains(reservation))
-            {
-                reservations.Add(reservation);
-                reservation.SetTable(this);
-            }
-        }
-
-        /// <summary>
-        /// Removes a Reservation from the Table's reservation list.
-        /// </summary>
-        public void RemoveReservation(Reservation reservation)
-        {
-            if (reservation == null || !reservations.Contains(reservation))
-                throw new ArgumentException("Reservation not found in the Table.");
-            reservations.Remove(reservation);
-            reservation.RemoveTable();
-        }
-
-        /// <summary>
-        /// Updates a Reservation in the Table.
-        /// Ensures that the new ReservationDateTime does not conflict.
-        /// </summary>
-        public void UpdateReservation(Reservation oldReservation, Reservation newReservation)
-        {
-            if (oldReservation == null || newReservation == null)
-                throw new ArgumentNullException("Reservation cannot be null.");
-            if (!reservations.Contains(oldReservation))
-                throw new ArgumentException("Old Reservation not found in the Table.");
-            if (reservations.Contains(newReservation))
-                throw new ArgumentException("New Reservation already exists in the Table.");
-
-            // **Check for ReservationDateTime conflict**
-            if (reservations.Any(r => r.ReservationDateTime == newReservation.ReservationDateTime && r != oldReservation))
-                throw new ArgumentException($"A reservation already exists at {newReservation.ReservationDateTime} for this table.");
-
-            // Remove old reservation
-            RemoveReservation(oldReservation);
-
-            // Add new reservation
-            AddReservation(newReservation);
-        }
+        public bool IsOccupied => Reservations.Any();
 
         // -------------------------------
         // Constructors
@@ -210,11 +148,81 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Table() { }
+        public Table()
+        {
+            // Initialize Reservations dictionary
+            Reservations = new Dictionary<DateTime, Reservation>();
+        }
+
+        // -------------------------------
+        // Qualified Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Adds a Reservation to the Table at the specified DateTime.
+        /// Ensures that no duplicate reservations exist at the same DateTime.
+        /// </summary>
+        /// <param name="reservation">The Reservation to add.</param>
+        public void AddReservation(Reservation reservation)
+        {
+            if (reservation == null)
+                throw new ArgumentNullException(nameof(reservation), "Reservation cannot be null.");
+
+            DateTime reservationDateTime = reservation.ReservationDateTime;
+
+            if (Reservations.ContainsKey(reservationDateTime))
+                throw new InvalidOperationException($"A reservation already exists at {reservationDateTime} for this table.");
+
+            Reservations[reservationDateTime] = reservation;
+
+            // Set the Table in the Reservation if not already set
+            if (reservation.Table != this)
+            {
+                reservation.SetTable(this);
+            }
+        }
 
         /// <summary>
-        /// Determines whether the specified object is equal to the current Table.
+        /// Removes a Reservation from the Table at the specified DateTime.
         /// </summary>
+        /// <param name="reservationDateTime">The DateTime of the Reservation to remove.</param>
+        public void RemoveReservation(DateTime reservationDateTime)
+        {
+            if (Reservations.ContainsKey(reservationDateTime))
+            {
+                var reservation = Reservations[reservationDateTime];
+                Reservations.Remove(reservationDateTime);
+                reservation.RemoveTable();
+            }
+            else
+            {
+                throw new KeyNotFoundException("No reservation found at the specified DateTime for this table.");
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing Reservation's DateTime.
+        /// Ensures that the new DateTime does not conflict with existing reservations.
+        /// </summary>
+        /// <param name="currentDateTime">The current DateTime of the Reservation.</param>
+        /// <param name="newDateTime">The new DateTime to assign to the Reservation.</param>
+        public void UpdateReservationDateTime(DateTime currentDateTime, DateTime newDateTime)
+        {
+            if (!Reservations.ContainsKey(currentDateTime))
+                throw new KeyNotFoundException("No reservation found at the current DateTime for this table.");
+
+            if (Reservations.ContainsKey(newDateTime))
+                throw new InvalidOperationException($"A reservation already exists at {newDateTime} for this table.");
+
+            var reservation = Reservations[currentDateTime];
+            Reservations.Remove(currentDateTime);
+            Reservations[newDateTime] = reservation;
+
+            reservation.ReservationDateTime = newDateTime;
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Table other)
@@ -223,14 +231,11 @@ namespace BYT_Assignment_3.Models
                        MaxSeats == other.MaxSeats &&
                        Location == other.Location &&
                        SeatingArrangement == other.SeatingArrangement;
-                // Excluding Orders and Reservations collections to simplify equality
+                // Excluding Reservations for simplicity
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(TableNumber, MaxSeats, Location, SeatingArrangement);

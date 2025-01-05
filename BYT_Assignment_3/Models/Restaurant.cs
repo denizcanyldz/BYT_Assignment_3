@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -11,9 +12,9 @@ namespace BYT_Assignment_3.Models
         // Class/Static Attributes
         // -------------------------------
         private static int totalRestaurants = 0;
-        
+
         /// <summary>
-        /// Gets or sets the total number of restaurants.
+        /// Gets the total number of restaurants.
         /// </summary>
         public static int TotalRestaurants
         {
@@ -25,12 +26,12 @@ namespace BYT_Assignment_3.Models
                 totalRestaurants = value;
             }
         }
-        
+
         // -------------------------------
         // Class Extent
         // -------------------------------
         private static List<Restaurant> restaurants = new List<Restaurant>();
-        
+
         /// <summary>
         /// Gets a read-only list of all restaurants.
         /// </summary>
@@ -38,7 +39,7 @@ namespace BYT_Assignment_3.Models
         {
             return restaurants.AsReadOnly();
         }
-        
+
         /// <summary>
         /// Sets the entire restaurant list (used during deserialization).
         /// </summary>
@@ -58,11 +59,11 @@ namespace BYT_Assignment_3.Models
             Staff.SetAll(allStaff);
             Staff.TotalStaff = Staff.GetAll().Count;
         }
-        
+
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int RestaurantId { get; set; }
+        public int RestaurantId { get; private set; }
 
         private string name;
         public string Name
@@ -100,13 +101,13 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        public List<Menu> Menus { get; set; } = new List<Menu>();
+        public List<Menu> Menus { get; private set; } = new List<Menu>();
 
         // -------------------------------
-        // Multi-Value Attributes
+        // Aggregation Attributes
         // -------------------------------
         private readonly List<Staff> staffMembers = new List<Staff>();
-        
+
         /// <summary>
         /// Gets a read-only list of staff members associated with the restaurant.
         /// </summary>
@@ -115,12 +116,29 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Additional Attributes
         // -------------------------------
-        public Dictionary<string, string> OpeningHours { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> OpeningHours { get; private set; } = new Dictionary<string, string>();
 
-        public List<Order> Orders { get; set; } = new List<Order>();
-        public List<Payment> Payments { get; set; } = new List<Payment>();
-        public List<Feedback> Feedbacks { get; set; } = new List<Feedback>();
-        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        public List<Order> Orders { get; private set; } = new List<Order>();
+        public List<Payment> Payments { get; private set; } = new List<Payment>();
+        public List<Feedback> Feedbacks { get; private set; } = new List<Feedback>();
+        public List<Reservation> Reservations { get; private set; } = new List<Reservation>();
+
+        // -------------------------------
+        // One-to-One Relationship Attribute
+        // -------------------------------
+        private Inventory? inventory;
+
+        /// <summary>
+        /// Gets the Inventory managed by the Restaurant.
+        /// </summary>
+        public Inventory? Inventory
+        {
+            get => inventory;
+            private set
+            {
+                inventory = value;
+            }
+        }
 
         // -------------------------------
         // Association Methods
@@ -128,21 +146,22 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Adds a Staff member to the Restaurant.
         /// </summary>
+        /// <param name="staff">The Staff member to add.</param>
         public void AddStaff(Staff staff)
         {
             if (staff == null)
                 throw new ArgumentException("Staff cannot be null.");
-
             if (!staffMembers.Contains(staff))
             {
                 staffMembers.Add(staff);
-                staff.SetRestaurant(this);
+                staff.SetRestaurantInternal(this);
             }
         }
 
         /// <summary>
         /// Removes a Staff member from the Restaurant.
         /// </summary>
+        /// <param name="staff">The Staff member to remove.</param>
         public void RemoveStaff(Staff staff)
         {
             if (staff == null)
@@ -151,18 +170,19 @@ namespace BYT_Assignment_3.Models
             if (staffMembers.Contains(staff))
             {
                 staffMembers.Remove(staff);
-                staff.RemoveRestaurant();
+                staff.RemoveRestaurantInternal();
             }
         }
 
         /// <summary>
         /// Updates a Staff member's association with the Restaurant.
         /// </summary>
+        /// <param name="oldStaff">The Staff member to be replaced.</param>
+        /// <param name="newStaff">The new Staff member to associate.</param>
         public void UpdateStaff(Staff oldStaff, Staff newStaff)
         {
             if (oldStaff == null || newStaff == null)
                 throw new ArgumentException("Staff cannot be null.");
-
             if (!staffMembers.Contains(oldStaff))
                 throw new ArgumentException("Old Staff member not found in the Restaurant.");
 
@@ -212,8 +232,54 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("Reservation cannot be null.");
             Reservations.Add(reservation);
         }
-        
-        
+
+        /// <summary>
+        /// Assigns an Inventory to the Restaurant.
+        /// </summary>
+        public void AssignInventory(Inventory inventory)
+        {
+            if (inventory == null)
+                throw new ArgumentNullException(nameof(inventory));
+
+            if (this.inventory != null)
+                throw new InvalidOperationException("This Restaurant already has an Inventory assigned.");
+
+            if (inventory.Restaurant != null)
+                throw new InvalidOperationException("This Inventory is already assigned to another Restaurant.");
+
+            this.inventory = inventory;
+            inventory.SetRestaurantInternal(this);
+        }
+
+        /// <summary>
+        /// Unassigns the Inventory from the Restaurant.
+        /// </summary>
+        public void UnassignInventory()
+        {
+            if (this.inventory == null)
+                return;
+
+            var oldInventory = this.inventory;
+            this.inventory = null;
+            oldInventory.SetRestaurantInternal(null);
+        }
+
+        /// <summary>
+        /// Internal method to set Inventory without causing recursion.
+        /// </summary>
+        internal void SetInventoryInternal(Inventory inventory)
+        {
+            this.inventory = inventory;
+        }
+
+        /// <summary>
+        /// Internal method to remove Inventory without causing recursion.
+        /// </summary>
+        internal void RemoveInventoryInternal(Inventory inventory)
+        {
+            if (this.inventory == inventory)
+                this.inventory = null;
+        }
 
         // -------------------------------
         // Constructors
@@ -223,11 +289,13 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public Restaurant(int restaurantId, string name, string address, string contactNumber, List<Menu> menus, Dictionary<string, string>? openingHours = null)
         {
+            if (restaurantId <= 0)
+                throw new ArgumentException("RestaurantId must be positive.", nameof(restaurantId));
             RestaurantId = restaurantId;
             Name = name;
             Address = address;
             ContactNumber = contactNumber;
-            Menus = menus ?? throw new ArgumentException("Menus list cannot be null.");
+            Menus = menus ?? throw new ArgumentException("Menus list cannot be null.", nameof(menus));
 
             if (openingHours != null)
             {

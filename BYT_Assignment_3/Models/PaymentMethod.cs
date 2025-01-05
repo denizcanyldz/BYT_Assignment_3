@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -46,7 +48,6 @@ namespace BYT_Assignment_3.Models
             TotalPaymentMethods = paymentMethods.Count;
         }
 
-       
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
@@ -112,32 +113,60 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public PaymentMethod() { }
         
-       // -------------------------------
+        // -------------------------------
         // Association Methods
         // -------------------------------
-        public void AddPayment(Payment payment)
+        /// <summary>
+        /// Adds a Payment to the PaymentMethod, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="payment">The Payment to add.</param>
+        /// <param name="callPaymentSetMethod">Flag to prevent infinite recursion.</param>
+        public void AddPayment(Payment payment, bool callPaymentSetMethod = true)
         {
             if (payment == null)
                 throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
             if (!payments.Contains(payment))
             {
                 payments.Add(payment);
-                payment.SetPaymentMethod(this);
+                if (callPaymentSetMethod && payment.PaymentMethod != this)
+                {
+                    payment.SetPaymentMethod(this, false); // Prevent recursion
+                }
             }
         }
 
-        public void RemovePayment(Payment payment)
+        /// <summary>
+        /// Removes a Payment from the PaymentMethod, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="payment">The Payment to remove.</param>
+        /// <param name="callPaymentRemoveMethod">Flag to prevent infinite recursion.</param>
+        public void RemovePayment(Payment payment, bool callPaymentRemoveMethod = true)
         {
-            if (payment == null || !payments.Contains(payment))
+            if (payment == null)
+                throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
+            if (payments.Contains(payment))
+            {
+                payments.Remove(payment);
+                if (callPaymentRemoveMethod && payment.PaymentMethod == this)
+                {
+                    payment.RemovePaymentMethod(false); // Prevent recursion
+                }
+            }
+            else
+            {
                 throw new ArgumentException("Payment not found in the PaymentMethod.");
-            payments.Remove(payment);
-            payment.RemovePaymentMethod();
+            }
         }
 
+        /// <summary>
+        /// Updates an existing Payment with a new Payment in the PaymentMethod.
+        /// </summary>
+        /// <param name="oldPayment">The Payment to be replaced.</param>
+        /// <param name="newPayment">The new Payment to replace with.</param>
         public void UpdatePayment(Payment oldPayment, Payment newPayment)
         {
             if (oldPayment == null || newPayment == null)
-                throw new ArgumentNullException("Payment cannot be null.");
+                throw new ArgumentNullException("Payments cannot be null.");
             if (!payments.Contains(oldPayment))
                 throw new ArgumentException("Old Payment not found in the PaymentMethod.");
             if (payments.Contains(newPayment))
@@ -149,6 +178,7 @@ namespace BYT_Assignment_3.Models
             // Add new payment
             AddPayment(newPayment);
         }
+
 
         // -------------------------------
         // Override Equals and GetHashCode
@@ -167,6 +197,25 @@ namespace BYT_Assignment_3.Models
         public override int GetHashCode()
         {
             return HashCode.Combine(PaymentMethodID, MethodName, Description);
+        }
+
+        // -------------------------------
+        // RemoveFromExtent Method
+        // -------------------------------
+        /// <summary>
+        /// Removes the PaymentMethod and all its associated Payments from the class extent.
+        /// </summary>
+        internal void RemoveFromExtent()
+        {
+            // Remove all associated Payments
+            foreach (var payment in payments.ToList()) // Use ToList to avoid modification during iteration
+            {
+                RemovePayment(payment);
+            }
+
+            // Remove from class extent
+            paymentMethods.Remove(this);
+            TotalPaymentMethods = paymentMethods.Count;
         }
     }
 }

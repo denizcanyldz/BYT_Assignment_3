@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -52,14 +53,14 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        
-
         private int menuItemID;
-        public int MenuItemID{
-            get=> menuItemID;
-            set {
-                if(value <= 0)
-                    throw new ArgumentException("MenuItemId must be greater that zero.");
+        public int MenuItemID
+        {
+            get => menuItemID;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("MenuItemId must be greater than zero.");
                 menuItemID = value;
             }
         }
@@ -71,13 +72,13 @@ namespace BYT_Assignment_3.Models
             get => name;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Name cannot be null or empty.");
                 name = value;
             }
         }
 
-       // -------------------------------
+        // -------------------------------
         // Optional Attributes
         // -------------------------------
         private bool isAvailable;
@@ -104,7 +105,7 @@ namespace BYT_Assignment_3.Models
             get => basePrice;
             set
             {
-                if(value < 0)
+                if (value < 0)
                     throw new ArgumentException("BasePrice cannot be negative.");
                 basePrice = value;
             }
@@ -166,7 +167,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
-        private List<Ingredient> ingredients = new List<Ingredient>();
+        private readonly List<Ingredient> ingredients = new List<Ingredient>();
 
         [XmlIgnore] // Prevent direct serialization of the collection
         public IReadOnlyList<Ingredient> Ingredients => ingredients.AsReadOnly();
@@ -180,10 +181,13 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentNullException(nameof(ingredient), "Ingredient cannot be null.");
             if (ingredients.Contains(ingredient))
                 throw new ArgumentException("Ingredient already exists in the menu item.");
-
+            if (ingredient.ParentInventory == null)
+                throw new InvalidOperationException("Ingredient must be assigned to an Inventory before being added to a MenuItem.");
+    
             ingredients.Add(ingredient);
-            ingredient.AddMenuItem(this); // Update reverse connection
+            ingredient.AddMenuItem(this); // Maintain bidirectional association
         }
+
 
         /// <summary>
         /// Removes an ingredient from the menu item.
@@ -196,9 +200,9 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("Ingredient not found in the menu item.");
 
             ingredients.Remove(ingredient);
-            ingredient.RemoveMenuItem(this); // Update reverse connection
+            ingredient.RemoveMenuItem(this); // Maintain bidirectional association
         }
-        
+
         /// <summary>
         /// Updates an existing ingredient with a new ingredient in the menu item.
         /// </summary>
@@ -221,7 +225,7 @@ namespace BYT_Assignment_3.Models
             // Add the new ingredient
             AddIngredient(newIngredient);
         }
-        
+
         /// <summary>
         /// Sets the entire ingredients list, replacing any existing associations.
         /// </summary>
@@ -229,7 +233,7 @@ namespace BYT_Assignment_3.Models
         public void SetAllIngredients(List<Ingredient> newIngredients)
         {
             // Remove existing associations
-            foreach (var ingredient in new List<Ingredient>(ingredients))
+            foreach (var ingredient in ingredients.ToList())
             {
                 RemoveIngredient(ingredient);
             }
@@ -254,37 +258,106 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public Menu Menu => menu;
 
-        // -------------------------------
-        // Association Methods
-        // -------------------------------
-        internal void SetMenu(Menu menu)
+        private Chef chef;
+
+        /// <summary>
+        /// Gets the Chef who prepares the MenuItem.
+        /// </summary>
+        [XmlIgnore] // Prevent circular reference during serialization
+        public Chef Chef => chef;
+
+        // For serialization purposes, store ChefID
+        [XmlElement("ChefID")]
+        public int ChefID
         {
-            if (menu == null)
-                throw new ArgumentException("Menu cannot be null.");
-            
-            if(this.menu != null && this.menu != menu)
+            get => Chef.MenuItems.Contains(this) ? Chef.StaffID : 0;
+            set
             {
-                // Remove from previous menu
-                this.menu.RemoveMenuItem(this);
-            }
-            
-            this.menu = menu;
-            
-            // Ensure reverse connection
-            if (!menu.MenuItems.Contains(this))
-            {
-                menu.AddMenuItem(this);
+                // This property is used during deserialization to associate MenuItem with Chef
+                // The actual Chef object should be linked after all objects are deserialized
             }
         }
 
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Sets the Chef for the MenuItem, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="newChef">The Chef to associate with.</param>
+        internal void SetChef(Chef newChef)
+        {
+            if (newChef == null)
+                throw new ArgumentNullException(nameof(newChef), "Chef cannot be null.");
+
+            if (this.chef != null && this.chef != newChef)
+            {
+                // Remove from previous chef's MenuItems
+                this.chef.RemoveMenuItem(this);
+            }
+
+            this.chef = newChef;
+
+            // Ensure bidirectional association
+            if (!newChef.MenuItems.Contains(this))
+            {
+                newChef.AddMenuItem(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Chef, maintaining bidirectional consistency.
+        /// </summary>
+        internal void RemoveChef()
+        {
+            if (this.chef != null)
+            {
+                var oldChef = this.chef;
+                this.chef = null;
+
+                // Remove from chef's MenuItems
+                if (oldChef.MenuItems.Contains(this))
+                {
+                    oldChef.RemoveMenuItem(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the Menu for the MenuItem, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="newMenu">The Menu to associate with.</param>
+        internal void SetMenu(Menu newMenu)
+        {
+            if (newMenu == null)
+                throw new ArgumentNullException(nameof(newMenu), "Menu cannot be null.");
+
+            if (this.menu != null && this.menu != newMenu)
+            {
+                // Remove from previous menu's MenuItems
+                this.menu.RemoveMenuItem(this);
+            }
+
+            this.menu = newMenu;
+
+            // Ensure bidirectional association
+            if (!newMenu.MenuItems.Contains(this))
+            {
+                newMenu.AddMenuItem(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Menu, maintaining bidirectional consistency.
+        /// </summary>
         internal void RemoveMenu()
         {
-            if (menu != null)
+            if (this.menu != null)
             {
-                var oldMenu = menu;
-                menu = null;
-                
-                // Remove reverse connection
+                var oldMenu = this.menu;
+                this.menu = null;
+
+                // Remove from menu's MenuItems
                 if (oldMenu.MenuItems.Contains(this))
                 {
                     oldMenu.RemoveMenuItem(this);
@@ -298,6 +371,13 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the MenuItem class with mandatory and optional attributes.
         /// </summary>
+        /// <param name="menuItemID">The unique identifier for the menu item.</param>
+        /// <param name="name">The name of the menu item.</param>
+        /// <param name="basePrice">The base price of the menu item.</param>
+        /// <param name="calories">The number of calories in the menu item.</param>
+        /// <param name="discountPrice">The discount price of the menu item.</param>
+        /// <param name="preparationTime">The preparation time in minutes.</param>
+        /// <param name="isAvailable">Availability status.</param>
         public MenuItem(int menuItemID, string name, double basePrice, int calories, double discountPrice, int preparationTime, bool isAvailable = true)
         {
             MenuItemID = menuItemID;
@@ -332,9 +412,33 @@ namespace BYT_Assignment_3.Models
                        Calories == other.Calories &&
                        DiscountPrice == other.DiscountPrice &&
                        PreparationTime == other.PreparationTime;
-                // Excluding Menu reference for simplicity
+                // Excluding Menu and Chef references for simplicity
             }
             return false;
+        }
+        
+        // -------------------------------
+        // RemoveFromExtent Method
+        // -------------------------------
+        /// <summary>
+        /// Removes the MenuItem and all its associated Ingredients from the class extent.
+        /// </summary>
+        public void RemoveFromExtent()
+        {
+            // Remove all associated Ingredients
+            foreach (var ingredient in ingredients.ToList()) // Use a copy to avoid modification during iteration
+            {
+                RemoveIngredient(ingredient);
+                // ingredient.RemoveMenuItem(this) is already called within RemoveIngredient
+            }
+
+            // Remove associations with Chef and Menu
+            RemoveChef();
+            RemoveMenu();
+
+            // Remove from class extent
+            menuItems.Remove(this);
+            TotalMenuItems = menuItems.Count;
         }
 
         public override int GetHashCode()
