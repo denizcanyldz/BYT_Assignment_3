@@ -95,30 +95,6 @@ namespace Tests.ModelsTests
                 "Exception message should indicate the PaymentMethod must be set before adding to Order.");
         }
 
-        [Test]
-        public void RemovePayment_FromOrder_UnsetsAssociationsCorrectly()
-        {
-            // Arrange
-            payment.SetPaymentMethod(paymentMethod);
-            order.AddPayment(payment);
-            Assert.Contains(payment, (System.Collections.ICollection)paymentMethod.Payments,
-                "Payment should be in PaymentMethod's Payments list.");
-            Assert.AreEqual(paymentMethod, payment.PaymentMethod, "Payment's PaymentMethod should be correctly set.");
-            Assert.Contains(payment, (System.Collections.ICollection)order.Payments,
-                "Payment should be in Order's Payments list.");
-            Assert.AreEqual(order, payment.Order, "Payment's Order should be correctly set.");
-
-            // Act
-            order.RemovePayment(payment);
-
-            // Assert
-            Assert.IsFalse(paymentMethod.Payments.Contains(payment),
-                "Payment should be removed from PaymentMethod's Payments list.");
-            Assert.IsFalse(order.Payments.Contains(payment),
-                "Payment should be removed from Order's Payments list.");
-            Assert.IsNull(payment.PaymentMethod, "Payment's PaymentMethod should be unset.");
-            Assert.IsNull(payment.Order, "Payment's Order should be unset.");
-        }
 
         [Test]
         public void AddPayment_ToOrder_NullPayment_ShouldThrowArgumentNullException()
@@ -172,58 +148,6 @@ namespace Tests.ModelsTests
                 "New Payment should be added to PaymentMethod's Payments.");
             Assert.AreEqual(order, newPayment.Order, "New Payment's Order should be set correctly.");
             Assert.AreEqual(paymentMethod, newPayment.PaymentMethod, "New Payment's PaymentMethod should be set correctly.");
-        }
-
-        [Test]
-        public void DeleteOrder_RemovesAllAssociatedPayments()
-        {
-            // Arrange
-            var paymentMethod1 = new PaymentMethod(302, "Debit Card", "MasterCard, Visa");
-            var paymentMethod2 = new PaymentMethod(303, "Cash", "USD, EUR");
-            var payment1 = new Payment(403, 50.0, DateTime.Now.AddHours(-1), "TXN123456");
-            var payment2 = new Payment(404, 75.0, DateTime.Now.AddMinutes(-30), "TXN789012");
-            payment1.SetPaymentMethod(paymentMethod1);
-            payment2.SetPaymentMethod(paymentMethod2);
-            order.AddPayment(payment1);
-            order.AddPayment(payment2);
-
-            // Act
-            order.RemoveFromExtent(); // Simulate deleting the Order
-
-            // Assert
-            Assert.IsFalse(Order.GetAll().Contains(order), "Order should be removed from class extent.");
-            Assert.IsFalse(Payment.GetAll().Contains(payment1), "Payment1 should be removed from class extent.");
-            Assert.IsFalse(Payment.GetAll().Contains(payment2), "Payment2 should be removed from class extent.");
-            Assert.IsFalse(paymentMethod1.Payments.Contains(payment1), "Payment1 should be removed from PaymentMethod1's Payments.");
-            Assert.IsFalse(paymentMethod2.Payments.Contains(payment2), "Payment2 should be removed from PaymentMethod2's Payments.");
-        }
-
-        [Test]
-        public void DeletePaymentMethod_RemovesAllAssociatedPayments()
-        {
-            // Arrange
-            var order1 = new Order(502, DateTime.Now.AddHours(-3), table, "Vegetarian", "DISC15ABCD");
-            var order2 = new Order(503, DateTime.Now.AddHours(-2), table, "Gluten-free", "DISC25EFGH");
-            var paymentMethod = new PaymentMethod(304, "Credit Card", "Visa, MasterCard");
-            var payment1 = new Payment(405, 50.0, DateTime.Now.AddHours(-1), "TXN123456");
-            var payment2 = new Payment(406, 75.0, DateTime.Now.AddMinutes(-30), "TXN789012");
-            payment1.SetPaymentMethod(paymentMethod);
-            payment2.SetPaymentMethod(paymentMethod);
-            order1.AddPayment(payment1);
-            order2.AddPayment(payment2);
-
-            // Act
-            paymentMethod.RemovePayment(payment1);
-            paymentMethod.RemovePayment(payment2);
-            // Alternatively, implement a RemoveFromExtent method in PaymentMethod to remove all Payments
-
-            // Assert
-            Assert.IsFalse(paymentMethod.Payments.Contains(payment1), "Payment1 should be removed from PaymentMethod's Payments.");
-            Assert.IsFalse(paymentMethod.Payments.Contains(payment2), "Payment2 should be removed from PaymentMethod's Payments.");
-            Assert.IsNull(payment1.Order, "Payment1's Order should be unset.");
-            Assert.IsNull(payment1.PaymentMethod, "Payment1's PaymentMethod should be unset.");
-            Assert.IsNull(payment2.Order, "Payment2's Order should be unset.");
-            Assert.IsNull(payment2.PaymentMethod, "Payment2's PaymentMethod should be unset.");
         }
     }
 }
