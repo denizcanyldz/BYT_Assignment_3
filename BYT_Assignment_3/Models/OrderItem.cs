@@ -1,15 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
     public class OrderItem
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalOrderItems = 0;
 
         /// <summary>
-        /// Gets or sets the total number of order items.
+        /// Gets the total number of order items.
         /// </summary>
         public static int TotalOrderItems
         {
@@ -42,7 +46,7 @@ namespace BYT_Assignment_3.Models
         {
             if (loadedOrderItems == null)
                 throw new ArgumentNullException(nameof(loadedOrderItems), "Loaded order items list cannot be null.");
-            
+
             orderItems = loadedOrderItems;
             TotalOrderItems = orderItems.Count;
         }
@@ -50,13 +54,15 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        
         private int orderItemID;
-        public int OrderItemID{
+
+        public int OrderItemID
+        {
             get => orderItemID;
-            set{
-                if(value <0)
-                    throw new ArgumentException("OrderItemID must be greater that zero.");
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("OrderItemID must be greater than zero.");
                 orderItemID = value;
             }
         }
@@ -68,7 +74,7 @@ namespace BYT_Assignment_3.Models
             get => itemName;
             set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("ItemName cannot be null or empty.");
                 itemName = value;
             }
@@ -81,7 +87,7 @@ namespace BYT_Assignment_3.Models
             get => quantity;
             set
             {
-                if(value <= 0)
+                if (value <= 0)
                     throw new ArgumentException("Quantity must be greater than zero.");
                 quantity = value;
             }
@@ -94,7 +100,7 @@ namespace BYT_Assignment_3.Models
             get => price;
             set
             {
-                if(value < 0)
+                if (value < 0)
                     throw new ArgumentException("Price cannot be negative.");
                 price = value;
             }
@@ -110,15 +116,24 @@ namespace BYT_Assignment_3.Models
             get => specialInstructions;
             set
             {
-                if(!string.IsNullOrEmpty(value) && value.Length > 250)
+                if (!string.IsNullOrEmpty(value) && value.Length > 250)
                     throw new ArgumentException("SpecialInstructions length cannot exceed 250 characters.");
                 specialInstructions = value;
             }
         }
 
         // -------------------------------
+        // Composition Attribute
+        // -------------------------------
+        [XmlIgnore]
+        public Order? ParentOrder { get; private set; }
+
+        // -------------------------------
         // Derived Attributes
         // -------------------------------
+        /// <summary>
+        /// Gets the total price for this order item (Price * Quantity).
+        /// </summary>
         public double TotalPrice => Price * Quantity;
 
         // -------------------------------
@@ -127,13 +142,24 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Initializes a new instance of the OrderItem class with mandatory and optional attributes.
         /// </summary>
-        public OrderItem(int orderItemID, string itemName, int quantity, double price, string? specialInstructions = null)
+        /// <param name="orderItemID">Unique identifier for the order item.</param>
+        /// <param name="itemName">Name of the item.</param>
+        /// <param name="quantity">Quantity ordered.</param>
+        /// <param name="price">Price per unit.</param>
+        /// <param name="specialInstructions">Any special instructions for the item.</param>
+        /// <param name="parentOrder">The Order to which this item belongs.</param>
+        public OrderItem(int orderItemID, string itemName, int quantity, double price, string? specialInstructions = null, Order? parentOrder = null)
         {
             OrderItemID = orderItemID;
             ItemName = itemName;
             Quantity = quantity;
             Price = price;
             SpecialInstructions = specialInstructions;
+
+            if (parentOrder != null)
+            {
+                SetParentOrder(parentOrder);
+            }
 
             // Add to class extent
             orderItems.Add(this);
@@ -143,11 +169,49 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public OrderItem() { }
-        
+        public OrderItem()
+        {
+            // Initialize if necessary
+        }
+
+        // -------------------------------
+        // Composition Methods
+        // -------------------------------
+        internal void RemoveFromExtent()
+        {
+            orderItems.Remove(this);
+            TotalOrderItems = orderItems.Count;
+        }
+
         /// <summary>
-        /// Determines whether the specified object is equal to the current OrderItem.
+        /// Sets the parent order for this order item.
         /// </summary>
+        /// <param name="order">The Order to set as parent.</param>
+        internal void SetParentOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order), "Parent Order cannot be null.");
+            if (ParentOrder != null && ParentOrder != order)
+                throw new InvalidOperationException("OrderItem already belongs to another Order.");
+
+            ParentOrder = order;
+            if (!order.OrderItems.Contains(this))
+            {
+                order.AddOrderItem(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the parent order association from this order item.
+        /// </summary>
+        internal void RemoveParentOrder()
+        {
+            ParentOrder = null;
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is OrderItem other)
@@ -157,13 +221,11 @@ namespace BYT_Assignment_3.Models
                        Quantity == other.Quantity &&
                        Price == other.Price &&
                        SpecialInstructions == other.SpecialInstructions;
+                // Excluding ParentOrder to simplify equality
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(OrderItemID, ItemName, Quantity, Price, SpecialInstructions);

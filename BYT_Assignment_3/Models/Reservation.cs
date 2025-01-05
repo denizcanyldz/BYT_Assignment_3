@@ -99,57 +99,15 @@ namespace BYT_Assignment_3.Models
             }
         }
 
+        // -------------------------------
+        // Association Attributes
+        // -------------------------------
         private Table table;
 
         /// <summary>
-        /// Gets or sets the table associated with the reservation.
+        /// Gets the table associated with the reservation.
         /// </summary>
-        public Table Table
-        {
-            get => table;
-            private set
-            {
-                if (value == null)
-                    throw new ArgumentException("Table cannot be null.");
-                table = value;
-            }
-        }
-
-        // -------------------------------
-        // Multi-Value Attributes
-        // -------------------------------
-        private List<OrderItem> orderItems = new List<OrderItem>();
-
-        [XmlIgnore] // Prevent direct serialization of the collection
-        public IReadOnlyList<OrderItem> OrderItems => orderItems.AsReadOnly();
-
-        /// <summary>
-        /// Adds an order item to the reservation.
-        /// </summary>
-        public void AddOrderItem(OrderItem item)
-        {
-            if (item == null)
-                throw new ArgumentException("OrderItem cannot be null.");
-            orderItems.Add(item);
-        }
-
-        /// <summary>
-        /// Removes an order item from the reservation.
-        /// </summary>
-        public void RemoveOrderItem(OrderItem item)
-        {
-            if (item == null || !orderItems.Contains(item))
-                throw new ArgumentException("OrderItem not found.");
-            orderItems.Remove(item);
-        }
-
-        // -------------------------------
-        // Derived Attributes
-        // -------------------------------
-        /// <summary>
-        /// Gets the total number of guests based on order items.
-        /// </summary>
-        public int NumberOfGuests => orderItems.Sum(item => item.Quantity);
+        public Table Table => table;
 
         private Customer customer;
 
@@ -165,35 +123,18 @@ namespace BYT_Assignment_3.Models
             }
         }
 
-        /// <summary>
-        /// Sets the Customer for the Reservation.
-        /// </summary>
-        public void SetCustomer(Customer newCustomer)
-        {
-            if (newCustomer == null)
-                throw new ArgumentNullException(nameof(newCustomer), "Customer cannot be null.");
-            Customer = newCustomer;
-            if (!newCustomer.Reservations.Contains(this))
-            {
-                newCustomer.AddReservation(this);
-            }
-        }
+        // -------------------------------
+        // Multi-Value Attributes
+        // -------------------------------
+        private List<OrderItem> orderItems = new List<OrderItem>();
 
-        /// <summary>
-        /// Removes the Customer association from the Reservation.
-        /// </summary>
-        public void RemoveCustomer()
-        {
-            if (customer != null)
-            {
-                var oldCustomer = customer;
-                customer = null;
-                if (oldCustomer.Reservations.Contains(this))
-                {
-                    oldCustomer.RemoveReservation(this);
-                }
-            }
-        }
+        [XmlIgnore] // Prevent direct serialization of the collection
+        public IReadOnlyList<OrderItem> OrderItems => orderItems.AsReadOnly();
+
+        // -------------------------------
+        // Derived Attributes
+        // -------------------------------
+        public int NumberOfGuests => orderItems.Sum(item => item.Quantity);
 
         // -------------------------------
         // Constructors
@@ -204,12 +145,13 @@ namespace BYT_Assignment_3.Models
         public Reservation(int reservationID, Customer customer, DateTime reservationDateTime, Table table, string status, string? specialRequests = null)
         {
             ReservationID = reservationID;
-            Customer = customer;
-            SetCustomer(customer); // Establish bidirectional association
             ReservationDateTime = reservationDateTime;
-            Table = table;
             Status = status;
             SpecialRequests = specialRequests;
+
+            // Associate with Customer and Table
+            SetCustomer(customer);
+            SetTable(table);
 
             // Add to class extent
             reservations.Add(this);
@@ -222,7 +164,12 @@ namespace BYT_Assignment_3.Models
         public Reservation() { }
 
         // -------------------------------
-        // Association Methods
+        // Validation Helpers
+        // -------------------------------
+        // No additional validation helpers needed here as validation is handled in property setters
+
+        // -------------------------------
+        // Qualified Association Methods
         // -------------------------------
         /// <summary>
         /// Sets the Table for the Reservation, maintaining bidirectional association.
@@ -232,22 +179,14 @@ namespace BYT_Assignment_3.Models
             if (newTable == null)
                 throw new ArgumentNullException(nameof(newTable), "Table cannot be null.");
 
-            if (this.table != null && this.table != newTable)
-            {
-                // Remove from the old table's reservations
-                this.table.RemoveReservation(this);
-            }
+            // Check for existing reservation at the same DateTime
+            if (newTable.Reservations.ContainsKey(this.ReservationDateTime) && newTable.Reservations[this.ReservationDateTime] != this)
+                throw new InvalidOperationException($"A reservation already exists at {this.ReservationDateTime} for this table.");
 
-            // **Enforce uniqueness of ReservationDateTime per Table**
-            if (newTable.Reservations.Any(r => r.ReservationDateTime == this.ReservationDateTime && r != this))
-            {
-                throw new ArgumentException($"A reservation already exists at {this.ReservationDateTime} for this table.");
-            }
+            table = newTable;
 
-            this.table = newTable;
-
-            // Add this reservation to the new table's reservations if not already present
-            if (!newTable.Reservations.Contains(this))
+            // Add this reservation to the table's Reservations dictionary if not already present
+            if (!newTable.Reservations.ContainsKey(this.ReservationDateTime))
             {
                 newTable.AddReservation(this);
             }
@@ -258,17 +197,78 @@ namespace BYT_Assignment_3.Models
         /// </summary>
         public void RemoveTable()
         {
-            if (this.table != null)
+            if (table != null)
             {
-                var oldTable = this.table;
-                this.table = null;
+                var oldTable = table;
+                table = null;
 
-                // Remove this reservation from the old table's reservations
-                if (oldTable.Reservations.Contains(this))
+                // Remove this reservation from the old table's Reservations dictionary
+                if (oldTable.Reservations.ContainsKey(this.ReservationDateTime))
                 {
-                    oldTable.RemoveReservation(this);
+                    oldTable.RemoveReservation(this.ReservationDateTime);
                 }
             }
+        }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Sets the Customer for the Reservation, maintaining bidirectional association.
+        /// </summary>
+        public void SetCustomer(Customer newCustomer)
+        {
+            if (newCustomer == null)
+                throw new ArgumentNullException(nameof(newCustomer), "Customer cannot be null.");
+
+            Customer = newCustomer;
+
+            // Add this reservation to the customer's reservations list if not already present
+            if (!newCustomer.Reservations.Contains(this))
+            {
+                newCustomer.AddReservation(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Customer, maintaining bidirectional consistency.
+        /// </summary>
+        public void RemoveCustomer()
+        {
+            if (Customer != null)
+            {
+                var oldCustomer = Customer;
+                Customer = null;
+
+                // Remove this reservation from the old customer's reservations list
+                if (oldCustomer.Reservations.Contains(this))
+                {
+                    oldCustomer.RemoveReservation(this);
+                }
+            }
+        }
+
+        // -------------------------------
+        // Composition Methods
+        // -------------------------------
+        /// <summary>
+        /// Adds an OrderItem to the reservation.
+        /// </summary>
+        public void AddOrderItem(OrderItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item), "OrderItem cannot be null.");
+            orderItems.Add(item);
+        }
+
+        /// <summary>
+        /// Removes an OrderItem from the reservation.
+        /// </summary>
+        public void RemoveOrderItem(OrderItem item)
+        {
+            if (item == null || !orderItems.Contains(item))
+                throw new ArgumentException("OrderItem not found.");
+            orderItems.Remove(item);
         }
 
         // -------------------------------
@@ -284,7 +284,7 @@ namespace BYT_Assignment_3.Models
                        SpecialRequests == other.SpecialRequests &&
                        Status == other.Status &&
                        Table.Equals(other.Table);
-                // Excluding OrderItems collection to simplify equality
+                // Excluding OrderItems for simplicity
             }
             return false;
         }

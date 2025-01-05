@@ -4,7 +4,7 @@ using BYT_Assignment_3.Models;
 
 namespace BYT_Assignment_3.Persistences
 {
-  public static class PersistencyManager
+    public static class PersistencyManager
     {
         private const string DefaultFilePath = "extents.xml"; // Compile-time constant
         
@@ -37,7 +37,6 @@ namespace BYT_Assignment_3.Persistences
                     Restaurants = new List<Restaurant>(Restaurant.GetAll()),
                     WaiterBartenders = new List<WaiterBartender>(WaiterBartender.GetAll()),
                 };
-                
 
                 Persistence.SaveAll(filePath, extents);
             }

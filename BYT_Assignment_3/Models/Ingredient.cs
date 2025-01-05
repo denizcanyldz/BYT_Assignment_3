@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -43,11 +44,10 @@ namespace BYT_Assignment_3.Models
         /// Sets the entire ingredient list (used during deserialization).
         /// Validates each ingredient entry before adding.
         /// </summary>
-        /// <param name="loadedIngredients">List of ingredients to load.</param>
         public static void SetAll(List<Ingredient> loadedIngredients)
         {
             ingredients = loadedIngredients ?? new List<Ingredient>();
-            TotalIngredients = 0; // Reset count before re-adding validated ingredients
+            TotalIngredients = ingredients.Count;
 
             foreach (var ingredient in ingredients.ToList()) // Use a copy to allow safe removal
             {
@@ -84,17 +84,8 @@ namespace BYT_Assignment_3.Models
         // Mandatory Attributes (Immutable)
         // -------------------------------
         [XmlElement("IngredientID")]
-        private int ingredientID;
-        public int IngredientID
-        {
-            get => ingredientID;
-            private set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("IngredientID must be positive.");
-                ingredientID = value;
-            }
-        }
+        public int IngredientID { get; private set; }
+
         private string name;
 
         [XmlElement("Name")]
@@ -157,7 +148,13 @@ namespace BYT_Assignment_3.Models
                 isPerishable = value;
             }
         }
-        
+
+        // -------------------------------
+        // Composition Attribute
+        // -------------------------------
+        [XmlIgnore] // Prevent circular reference serialization
+        public Inventory? ParentInventory { get; private set; }
+
         // -------------------------------
         // Multi-Value Attributes
         // -------------------------------
@@ -176,6 +173,10 @@ namespace BYT_Assignment_3.Models
             if (!menuItems.Contains(menuItem))
             {
                 menuItems.Add(menuItem);
+                if (!menuItem.Ingredients.Contains(this))
+                {
+                    menuItem.AddIngredient(this); // Maintain bidirectional association
+                }
             }
         }
 
@@ -189,10 +190,13 @@ namespace BYT_Assignment_3.Models
             if (menuItems.Contains(menuItem))
             {
                 menuItems.Remove(menuItem);
+                if (menuItem.Ingredients.Contains(this))
+                {
+                    menuItem.RemoveIngredient(this); // Maintain bidirectional association
+                }
             }
         }
-        
-        
+
         // -------------------------------
         // Constructors
         // -------------------------------
@@ -258,6 +262,38 @@ namespace BYT_Assignment_3.Models
 
             if (ingredient.Quantity < 0)
                 throw new ArgumentException("Quantity cannot be negative.");
+        }
+
+        public void RemoveFromExtent()
+        {
+            // Remove from Ingredient class's static list
+            ingredients.Remove(this);
+            TotalIngredients = ingredients.Count;
+
+            // Remove associations with MenuItems
+            foreach (var menuItem in menuItems.ToList())
+            {
+                RemoveMenuItem(menuItem);
+            }
+
+            // Remove from Inventory if assigned
+            if (ParentInventory != null)
+            {
+                ParentInventory.RemoveIngredient(this);
+            }
+        }
+
+        // -------------------------------
+        // Composition Management Methods
+        // -------------------------------
+        /// <summary>
+        /// Sets the parent Inventory for this Ingredient.
+        /// Internal to prevent external manipulation.
+        /// </summary>
+        /// <param name="inventory">The Inventory to set as parent.</param>
+        internal void SetParentInventory(Inventory? inventory)
+        {
+            ParentInventory = inventory;
         }
     }
 }

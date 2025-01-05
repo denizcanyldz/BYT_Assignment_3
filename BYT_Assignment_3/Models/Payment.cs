@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
@@ -9,7 +13,7 @@ namespace BYT_Assignment_3.Models
         private static int totalPayments = 0;
 
         /// <summary>
-        /// Gets or sets the total number of payments.
+        /// Gets the total number of payments.
         /// </summary>
         public static int TotalPayments
         {
@@ -38,7 +42,7 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Sets the entire payment list (used during deserialization).
         /// </summary>
-         public static void SetAll(List<Payment> loadedPayments)
+        public static void SetAll(List<Payment> loadedPayments)
         {
             if (loadedPayments == null)
                 throw new ArgumentNullException(nameof(loadedPayments), "Loaded payments list cannot be null.");
@@ -50,27 +54,45 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        
         private int paymentID;
-        public int PaymentID{
-            get=>paymentID;
-            set{
+        public int PaymentID
+        {
+            get => paymentID;
+            set
+            {
                 if (value <= 0)
                     throw new ArgumentException("PaymentID must be greater than zero.");
                 paymentID = value;
             }
         }
 
-        private int orderID;
+        // -------------------------------
+        // Association Attributes
+        // -------------------------------
+        private Order order;
 
+        /// <summary>
+        /// Gets the Order associated with this Payment.
+        /// </summary>
+        [XmlIgnore]
+        public Order Order
+        {
+            get => order;
+            private set
+            {
+                order = value;
+            }
+        }
+
+        // For serialization purposes, store OrderID
+        [XmlElement("OrderID")]
         public int OrderID
         {
-            get => orderID;
+            get => Order.OrderID;
             set
             {
-                if (value <= 0)
-                    throw new ArgumentException("OrderID must be positive.");
-                orderID = value;
+                // This property is used during deserialization to associate Payment with Order
+                // The actual Order object should be linked after all objects are deserialized
             }
         }
 
@@ -126,57 +148,40 @@ namespace BYT_Assignment_3.Models
 
         private PaymentMethod paymentMethod;
 
+        /// <summary>
+        /// Gets the PaymentMethod associated with this Payment.
+        /// </summary>
+        [XmlIgnore] // Prevent circular reference during serialization
         public PaymentMethod PaymentMethod
         {
             get => paymentMethod;
-            set
+            private set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(paymentMethod), "PaymentMethod cannot be null.");
                 paymentMethod = value;
             }
         }
 
-        /// <summary>
-        /// Sets the PaymentMethod for the Payment.
-        /// </summary>
-        public void SetPaymentMethod(PaymentMethod method)
+        // For serialization purposes, store PaymentMethodID
+        [XmlElement("PaymentMethodID")]
+        public int PaymentMethodID
         {
-            if (method == null)
-                throw new ArgumentNullException(nameof(method), "PaymentMethod cannot be null.");
-            PaymentMethod = method;
-            if (!method.Payments.Contains(this))
+            get => PaymentMethod.PaymentMethodID;
+            set
             {
-                method.AddPayment(this);
+                // This property is used during deserialization to associate Payment with PaymentMethod
+                // The actual PaymentMethod object should be linked after all objects are deserialized
             }
         }
 
-        /// <summary>
-        /// Removes the PaymentMethod association from the Payment.
-        /// </summary>
-        public void RemovePaymentMethod()
-        {
-            if (paymentMethod != null)
-            {
-                var oldMethod = paymentMethod;
-                paymentMethod = null;
-                if (oldMethod.Payments.Contains(this))
-                {
-                    oldMethod.RemovePayment(this);
-                }
-            }
-        }
-        
         // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
         /// Initializes a new instance of the Payment class with mandatory and optional attributes.
         /// </summary>
-        public Payment(int paymentID, int orderID, double amount, DateTime dateTime, string? transactionID = null)
+        public Payment(int paymentID, double amount, DateTime dateTime, string? transactionID = null)
         {
             PaymentID = paymentID;
-            OrderID = orderID;
             Amount = amount;
             DateTime = dateTime;
             TransactionID = transactionID;
@@ -185,34 +190,158 @@ namespace BYT_Assignment_3.Models
             payments.Add(this);
             TotalPayments = payments.Count;
         }
+        
+
 
         /// <summary>
-        /// Parameterless constructor for serialization.
+        /// Initializes a new instance of the Payment class with mandatory and optional attributes.
         /// </summary>
-        public Payment() { }
-        
+        public Payment()
+        {
+            // Parameterless constructor for serialization
+        }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
         /// <summary>
-        /// Determines whether the specified object is equal to the current Payment.
+        /// Sets the Order for this Payment, ensuring bidirectional consistency.
         /// </summary>
+        /// <param name="newOrder">The Order to associate with.</param>
+        public void SetOrder(Order newOrder, bool callOrderAddPayment = true)
+        {
+            if (newOrder == null)
+                throw new ArgumentNullException(nameof(newOrder), "Order cannot be null.");
+
+            if (this.Order != null && this.Order != newOrder)
+            {
+                this.Order.RemovePayment(this, false); // Prevent recursion
+            }
+
+            this.Order = newOrder;
+
+            if (callOrderAddPayment && !newOrder.Payments.Contains(this))
+            {
+                newOrder.AddPayment(this, false); // Prevent recursion
+            }
+        }
+       
+
+
+        /// <summary>
+        /// Removes the association with the current Order, maintaining bidirectional consistency.
+        /// </summary>
+        public void RemoveOrder(bool callPaymentRemoveOrder = true)
+        { 
+            if (this.Order != null)
+            {
+                var oldOrder = this.Order;
+                this.Order = null;
+
+                if (callPaymentRemoveOrder && oldOrder.Payments.Contains(this))
+                {
+                    oldOrder.RemovePayment(this, false); // Prevent recursion
+                }
+
+                // Additionally, remove from PaymentMethod
+                if (this.PaymentMethod != null)
+                {
+                    this.PaymentMethod.RemovePayment(this, false); // Prevent recursion
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Sets the PaymentMethod for the Payment.
+        /// </summary>
+        public void SetPaymentMethod(PaymentMethod method, bool callPaymentMethodAddPayment = true)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method), "PaymentMethod cannot be null.");
+
+            if (this.PaymentMethod != null && this.PaymentMethod != method)
+            {
+                this.PaymentMethod.RemovePayment(this, false); // Prevent recursion
+            }
+
+            this.PaymentMethod = method;
+
+            if (callPaymentMethodAddPayment && !method.Payments.Contains(this))
+            {
+                method.AddPayment(this, false); // Prevent recursion
+            }
+        }
+
+
+        /// <summary>
+        /// Removes the PaymentMethod association from the Payment.
+        /// </summary>
+        public void RemovePaymentMethod(bool callPaymentMethodRemovePayment = true)
+        {
+            if (this.PaymentMethod != null)
+            {
+                var oldMethod = this.PaymentMethod;
+                this.PaymentMethod = null;
+
+                if (callPaymentMethodRemovePayment && oldMethod.Payments.Contains(this))
+                {
+                    oldMethod.RemovePayment(this, false); // Prevent recursion
+                }
+
+                // Additionally, remove from Order
+                if (this.Order != null)
+                {
+                    this.Order.RemovePayment(this, false); // Prevent recursion
+                }
+            }
+        }
+
+
+        // -------------------------------
+        // RemoveFromExtent Method
+        // -------------------------------
+        /// <summary>
+        /// Removes the Payment and all its associations from the class extent.
+        /// </summary>
+        internal void RemoveFromExtent()
+        {
+            // Remove from class extent
+            payments.Remove(this);
+            TotalPayments = payments.Count;
+
+            // Remove associations
+            RemoveOrder();
+            RemovePaymentMethod();
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is Payment other)
             {
                 return PaymentID == other.PaymentID &&
-                       OrderID == other.OrderID &&
+                       (Order?.OrderID == other.Order?.OrderID) &&
                        Amount == other.Amount &&
                        DateTime == other.DateTime &&
-                       TransactionID == other.TransactionID;
+                       TransactionID == other.TransactionID &&
+                       (PaymentMethod?.PaymentMethodID == other.PaymentMethod?.PaymentMethodID);
             }
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
-            return HashCode.Combine(PaymentID, OrderID, Amount, DateTime, TransactionID);
+            return HashCode.Combine(
+                PaymentID,
+                Order?.OrderID ?? 0,
+                Amount,
+                DateTime,
+                TransactionID,
+                PaymentMethod?.PaymentMethodID ?? 0
+            );
         }
     }
 }

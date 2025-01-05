@@ -1,4 +1,7 @@
-﻿using System.Xml.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
 {
@@ -7,10 +10,11 @@ namespace BYT_Assignment_3.Models
     [XmlInclude(typeof(Bartender))]
     [XmlInclude(typeof(Waiter))]
     [XmlInclude(typeof(WaiterBartender))]
+    [XmlInclude(typeof(Manager))]
     public abstract class Staff
     {
         // -------------------------------
-        // Class/Static Attribute
+        // Class/Static Attributes
         // -------------------------------
         private static int totalStaff = 0;
 
@@ -42,28 +46,6 @@ namespace BYT_Assignment_3.Models
         }
 
         /// <summary>
-        /// Adds a staff member to the staff list.
-        /// </summary>
-        protected void AddStaff(Staff staff)
-        {
-            if (staff == null)
-                throw new ArgumentException("Staff cannot be null.");
-            staffMembers.Add(staff);
-            TotalStaff = staffMembers.Count;
-        }
-
-        /// <summary>
-        /// Removes a staff member from the staff list.
-        /// </summary>
-        public static void RemoveStaff(Staff staff)
-        {
-            if (staff == null || !staffMembers.Contains(staff))
-                throw new ArgumentException("Staff member not found.");
-            staffMembers.Remove(staff);
-            TotalStaff = staffMembers.Count;
-        }
-
-        /// <summary>
         /// Sets the entire staff list (used during deserialization).
         /// </summary>
         public static void SetAll(List<Staff> loadedStaff)
@@ -75,7 +57,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Mandatory Attributes (Simple)
         // -------------------------------
-        public int StaffID { get; set; }
+        public int StaffID { get; private set; }
 
         private string name;
 
@@ -105,174 +87,16 @@ namespace BYT_Assignment_3.Models
                 contactNumber = value;
             }
         }
-// -------------------------------
-        // Association Attribute
+
         // -------------------------------
-        private Restaurant restaurant;
+        // Association Attributes
+        // -------------------------------
+        private Restaurant? restaurant;
 
         /// <summary>
         /// Gets the Restaurant associated with the Staff member.
         /// </summary>
-        public Restaurant Restaurant => restaurant;
-
-        // -------------------------------
-        // Association Methods
-        // -------------------------------
-        /// <summary>
-        /// Sets the Restaurant for the Staff member.
-        /// </summary>
-        public void SetRestaurant(Restaurant restaurant)
-        {
-            if (restaurant == null)
-                throw new ArgumentException("Restaurant cannot be null.");
-
-            if(this.restaurant != null && this.restaurant != restaurant)
-            {
-                // Remove from previous restaurant
-                this.restaurant.RemoveStaff(this);
-            }
-
-            this.restaurant = restaurant;
-
-            // Ensure reverse connection
-            if (!restaurant.StaffMembers.Contains(this))
-            {
-                restaurant.AddStaff(this);
-            }
-        }
-
-        /// <summary>
-        /// Removes the association with the current Restaurant.
-        /// </summary>
-        public void RemoveRestaurant()
-        {
-            if (restaurant != null)
-            {
-                var oldRestaurant = restaurant;
-                restaurant = null;
-
-                // Remove reverse connection
-                if (oldRestaurant.StaffMembers.Contains(this))
-                {
-                    oldRestaurant.RemoveStaff(this);
-                }
-            }
-        }
-
-        // -------------------------------
-        // Reflexive Association Attributes
-        // -------------------------------
-        private Staff? supervisor;
-        private Staff? subordinate;
-
-        /// <summary>
-        /// Gets the supervisor of the Staff member.
-        /// </summary>
-        public Staff? Supervisor => supervisor;
-
-        /// <summary>
-        /// Gets the subordinate of the Staff member.
-        /// </summary>
-        public Staff? Subordinate => subordinate;
-
-        // -------------------------------
-        // Reflexive Association Methods
-        // -------------------------------
-        /// <summary>
-        /// Assigns a supervisor to the Staff member.
-        /// </summary>
-        public void AssignSupervisor(Staff newSupervisor)
-        {
-            if (newSupervisor == null)
-                throw new ArgumentException("Supervisor cannot be null.");
-            if (newSupervisor == this)
-                throw new ArgumentException("Staff member cannot supervise themselves.");
-            if (this.subordinate != null && this.subordinate != newSupervisor)
-                throw new InvalidOperationException("This Staff member already has a subordinate.");
-            if (newSupervisor.supervisor != null && newSupervisor.supervisor != this)
-                throw new InvalidOperationException("The new supervisor already has a different supervisor.");
-
-            // Remove existing supervisor if any
-            if (this.supervisor != null)
-            {
-                var oldSupervisor = this.supervisor;
-                this.supervisor = null;
-                oldSupervisor.RemoveSubordinate();
-            }
-
-            // Assign new supervisor
-            this.supervisor = newSupervisor;
-
-            // Set reverse connection
-            if (newSupervisor.subordinate != this)
-            {
-                newSupervisor.AssignSubordinate(this);
-            }
-        }
-
-        /// <summary>
-        /// Removes the supervisor from the Staff member.
-        /// </summary>
-        public void RemoveSupervisor()
-        {
-            if (this.supervisor != null)
-            {
-                var oldSupervisor = this.supervisor;
-                this.supervisor = null;
-                if (oldSupervisor.subordinate == this)
-                {
-                    oldSupervisor.RemoveSubordinate();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Assigns a subordinate to the Staff member.
-        /// </summary>
-        private void AssignSubordinate(Staff newSubordinate)
-        {
-            if (newSubordinate == null)
-                throw new ArgumentException("Subordinate cannot be null.");
-            if (newSubordinate == this)
-                throw new ArgumentException("Staff member cannot be subordinate to themselves.");
-            if (this.supervisor != null && this.supervisor != newSubordinate)
-                throw new InvalidOperationException("This Staff member already has a supervisor.");
-            if (newSubordinate.subordinate != null && newSubordinate.subordinate != this)
-                throw new InvalidOperationException("The new subordinate already has a different subordinate.");
-
-            // Remove existing subordinate if any
-            if (this.subordinate != null)
-            {
-                var oldSubordinate = this.subordinate;
-                this.subordinate = null;
-                oldSubordinate.RemoveSupervisor();
-            }
-
-            // Assign new subordinate
-            this.subordinate = newSubordinate;
-
-            // Set reverse connection
-            if (newSubordinate.supervisor != this)
-            {
-                newSubordinate.AssignSupervisor(this);
-            }
-        }
-
-        /// <summary>
-        /// Removes the subordinate from the Staff member.
-        /// </summary>
-        private void RemoveSubordinate()
-        {
-            if (this.subordinate != null)
-            {
-                var oldSubordinate = this.subordinate;
-                this.subordinate = null;
-                if (oldSubordinate.supervisor == this)
-                {
-                    oldSubordinate.RemoveSupervisor();
-                }
-            }
-        }
+        public Restaurant? Restaurant => restaurant;
 
         // -------------------------------
         // Constructors
@@ -286,20 +110,182 @@ namespace BYT_Assignment_3.Models
             Name = name;
             ContactNumber = contactNumber;
 
+            if (restaurant != null)
+            {
+                SetRestaurantInternal(restaurant);
+            }
+
             // Add to class extent
             staffMembers.Add(this);
             TotalStaff = staffMembers.Count;
-
-            if (restaurant != null)
-            {
-                SetRestaurant(restaurant);
-            }
         }
 
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
         protected Staff() { }
+
+        // -------------------------------
+        // Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Sets the Restaurant for the Staff member, ensuring bidirectional consistency.
+        /// </summary>
+        /// <param name="newRestaurant">The Restaurant to associate with.</param>
+        internal void SetRestaurantInternal(Restaurant? newRestaurant)
+        {
+            if (this.restaurant == newRestaurant)
+                return; // No change needed
+
+            // Remove from current restaurant if exists
+            if (this.restaurant != null)
+            {
+                this.restaurant.RemoveStaff(this);
+            }
+
+            this.restaurant = newRestaurant;
+
+            // Add to the new restaurant's staff list if not already present
+            if (newRestaurant != null && !newRestaurant.StaffMembers.Contains(this))
+            {
+                newRestaurant.AddStaff(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the association with the current Restaurant, maintaining bidirectional consistency.
+        /// </summary>
+        internal void RemoveRestaurantInternal()
+        {
+            if (this.restaurant != null)
+            {
+                var oldRestaurant = this.restaurant;
+                this.restaurant = null;
+
+                // Remove this staff from the old restaurant's staff list
+                if (oldRestaurant.StaffMembers.Contains(this))
+                {
+                    oldRestaurant.RemoveStaff(this);
+                }
+            }
+        }
+
+        // -------------------------------
+        // Reflexive Association Attributes
+        // -------------------------------
+        private Staff? supervisor;
+
+        /// <summary>
+        /// Gets the supervisor of the Staff member.
+        /// </summary>
+        public Staff? Supervisor => supervisor;
+
+        private List<Staff> subordinates = new List<Staff>();
+
+        /// <summary>
+        /// Gets a read-only list of subordinates supervised by the Staff member.
+        /// </summary>
+        [XmlIgnore]
+        public IReadOnlyList<Staff> Subordinates => subordinates.AsReadOnly();
+
+        // -------------------------------
+        // Reflexive Association Methods
+        // -------------------------------
+        /// <summary>
+        /// Assigns a supervisor to the Staff member.
+        /// </summary>
+        /// <param name="newSupervisor">The Staff member to assign as supervisor.</param>
+        public void AssignSupervisor(Staff newSupervisor)
+        {
+            if (newSupervisor == null)
+                throw new ArgumentNullException(nameof(newSupervisor), "Supervisor cannot be null.");
+            if (newSupervisor == this)
+                throw new ArgumentException("Staff member cannot supervise themselves.");
+            if (IsCircularSupervision(newSupervisor))
+                throw new InvalidOperationException("Assigning this supervisor creates a circular supervisory relationship.");
+
+            // Remove existing supervisor if any
+            if (this.supervisor != null)
+            {
+                this.supervisor.subordinates.Remove(this);
+            }
+
+            // Assign new supervisor
+            this.supervisor = newSupervisor;
+
+            // Add this staff to the new supervisor's subordinates list if not already present
+            if (!newSupervisor.subordinates.Contains(this))
+            {
+                newSupervisor.subordinates.Add(this);
+            }
+        }
+
+        /// <summary>
+        /// Removes the supervisor from the Staff member.
+        /// </summary>
+        public void RemoveSupervisor()
+        {
+            if (this.supervisor != null)
+            {
+                var oldSupervisor = this.supervisor;
+                this.supervisor = null;
+
+                // Remove this staff from the old supervisor's subordinates list
+                if (oldSupervisor.subordinates.Contains(this))
+                {
+                    oldSupervisor.subordinates.Remove(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a subordinate to the Staff member.
+        /// </summary>
+        /// <param name="subordinate">The Staff member to add as subordinate.</param>
+        public void AddSubordinate(Staff subordinate)
+        {
+            if (subordinate == null)
+                throw new ArgumentNullException(nameof(subordinate), "Subordinate cannot be null.");
+            if (subordinate == this)
+                throw new ArgumentException("Staff member cannot be subordinate to themselves.");
+            if (IsCircularSupervision(subordinate))
+                throw new InvalidOperationException("Adding this subordinate creates a circular supervisory relationship.");
+
+            // Assign this staff as the supervisor of the subordinate
+            subordinate.AssignSupervisor(this);
+        }
+
+        /// <summary>
+        /// Removes a subordinate from the Staff member.
+        /// </summary>
+        /// <param name="subordinate">The Staff member to remove as subordinate.</param>
+        public void RemoveSubordinate(Staff subordinate)
+        {
+            if (subordinate == null)
+                throw new ArgumentNullException(nameof(subordinate), "Subordinate cannot be null.");
+            if (!subordinates.Contains(subordinate))
+                throw new ArgumentException("Subordinate not found.");
+
+            // Remove the supervisor from the subordinate
+            subordinate.RemoveSupervisor();
+        }
+
+        /// <summary>
+        /// Checks if assigning the new supervisor creates a circular supervisory relationship.
+        /// </summary>
+        /// <param name="potentialSupervisor">The Staff member to check.</param>
+        /// <returns>True if a circular relationship is detected; otherwise, false.</returns>
+        private bool IsCircularSupervision(Staff potentialSupervisor)
+        {
+            Staff? currentSupervisor = potentialSupervisor;
+            while (currentSupervisor != null)
+            {
+                if (currentSupervisor == this)
+                    return true;
+                currentSupervisor = currentSupervisor.supervisor;
+            }
+            return false;
+        }
 
         // -------------------------------
         // Override Equals and GetHashCode
@@ -311,14 +297,54 @@ namespace BYT_Assignment_3.Models
                 return StaffID == other.StaffID &&
                        Name == other.Name &&
                        ContactNumber == other.ContactNumber &&
-                       Restaurant.Equals(other.Restaurant);
+                       ((Restaurant == null && other.Restaurant == null) || (Restaurant?.RestaurantId == other.Restaurant?.RestaurantId));
+                // Excluding Supervisor and Subordinates for simplicity
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(StaffID, Name, ContactNumber, Restaurant);
+            return HashCode.Combine(StaffID, Name, ContactNumber, Restaurant?.RestaurantId);
+        }
+
+        // -------------------------------
+        // RemoveStaff Method
+        // -------------------------------
+        /// <summary>
+        /// Removes a Staff member from the class extent.
+        /// </summary>
+        /// <param name="staff">The Staff member to remove.</param>
+        /// <exception cref="ArgumentNullException">Thrown when staff is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when the staff member is not found.</exception>
+        public static void RemoveStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentNullException(nameof(staff), "Staff member cannot be null.");
+
+            if (!staffMembers.Contains(staff))
+                throw new ArgumentException("Staff member not found.", nameof(staff));
+
+            // Handle supervisor-subordinate relationships
+            if (staff.Supervisor != null)
+            {
+                staff.Supervisor.subordinates.Remove(staff);
+                staff.supervisor = null;
+            }
+
+            // Reassign or remove subordinates
+            foreach (var subordinate in staff.subordinates.ToList())
+            {
+                subordinate.RemoveSupervisor();
+                // Alternatively, you could assign them to another supervisor
+            }
+
+            // Remove associations with Restaurant
+            staff.RemoveRestaurantInternal();
+
+            // Remove from staffMembers list and update TotalStaff
+            staffMembers.Remove(staff);
+            TotalStaff = staffMembers.Count;
         }
     }
 }

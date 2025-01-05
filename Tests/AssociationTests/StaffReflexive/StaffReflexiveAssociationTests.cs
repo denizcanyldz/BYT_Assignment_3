@@ -1,8 +1,11 @@
 using BYT_Assignment_3.Models;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
-namespace Tests.AssociationTests.StaffReflexive;
-
-[TestFixture]
+namespace Tests.AssociationTests.StaffReflexive
+{
+    [TestFixture]
     public class StaffReflexiveAssociationTests
     {
         [SetUp]
@@ -28,7 +31,7 @@ namespace Tests.AssociationTests.StaffReflexive;
 
             // Assert
             Assert.AreEqual(supervisor, subordinate.Supervisor, "Subordinate's Supervisor should be correctly assigned.");
-            Assert.AreEqual(subordinate, supervisor.Subordinate, "Supervisor's Subordinate should be correctly assigned.");
+            Assert.That(supervisor.Subordinates, Does.Contain(subordinate), "Supervisor's Subordinates should include the subordinate.");
         }
 
         [Test]
@@ -45,7 +48,7 @@ namespace Tests.AssociationTests.StaffReflexive;
 
             // Assert
             Assert.IsNull(subordinate.Supervisor, "Subordinate's Supervisor should be null after removal.");
-            Assert.IsNull(supervisor.Subordinate, "Supervisor's Subordinate should be null after removal.");
+            Assert.That(supervisor.Subordinates, Does.Not.Contain(subordinate), "Supervisor's Subordinates should not contain the subordinate after removal.");
         }
 
         [Test]
@@ -63,8 +66,8 @@ namespace Tests.AssociationTests.StaffReflexive;
 
             // Assert
             Assert.AreEqual(supervisor2, subordinate.Supervisor, "Subordinate's Supervisor should be updated to supervisor2.");
-            Assert.AreEqual(subordinate, supervisor2.Subordinate, "Supervisor2's Subordinate should be the subordinate.");
-            Assert.IsNull(supervisor1.Subordinate, "Supervisor1's Subordinate should be null after subordinate is reassigned.");
+            Assert.That(supervisor2.Subordinates, Does.Contain(subordinate), "Supervisor2's Subordinates should include the subordinate.");
+            Assert.That(supervisor1.Subordinates, Does.Not.Contain(subordinate), "Supervisor1's Subordinates should not contain the subordinate after reassignment.");
         }
 
         [Test]
@@ -87,42 +90,12 @@ namespace Tests.AssociationTests.StaffReflexive;
             Staff subordinate = new Waiter(2, "Elizabeth Bennett", "020-7946-0958", restaurant);
 
             // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => subordinate.AssignSupervisor(null));
-            Assert.AreEqual("Supervisor cannot be null.", ex.Message, "Exception message should indicate that Supervisor cannot be null.");
+            var ex = Assert.Throws<ArgumentNullException>(() => subordinate.AssignSupervisor(null));
+            Assert.That(ex.Message, Does.Contain("Supervisor cannot be null."), "Exception message should indicate that Supervisor cannot be null.");
         }
 
         [Test]
-        public void TestAssignSupervisorWithExistingSubordinate_ShouldThrowException()
-        {
-            // Arrange
-            Restaurant restaurant = new Restaurant(1, "The Crown", "221B Baker Street", "020-7946-0958", new List<Menu>(), null);
-            Staff supervisor = new Manager(1, "Charles Dickens", "020-7946-0958", restaurant);
-            Staff subordinate1 = new Waiter(2, "Elizabeth Bennett", "020-7946-0958", restaurant);
-            Staff subordinate2 = new Waiter(3, "Emma Woodhouse", "020-7946-0958", restaurant);
-            subordinate1.AssignSupervisor(supervisor);
-
-            // Act & Assert
-            var ex = Assert.Throws<InvalidOperationException>(() => subordinate2.AssignSupervisor(supervisor));
-            Assert.AreEqual("This Staff member already has a subordinate.", ex.Message, "Exception message should indicate that the Supervisor already has a different subordinate.");
-        }
-
-        [Test]
-        public void TestAssignSupervisorAlreadyHasSupervisor_ShouldThrowException()
-        {
-            // Arrange
-            Restaurant restaurant = new Restaurant(1, "The Crown", "221B Baker Street", "020-7946-0958", new List<Menu>(), null);
-            Staff supervisor1 = new Manager(1, "Charles Dickens", "020-7946-0958", restaurant);
-            Staff supervisor2 = new Manager(2, "Jane Austen", "020-7946-0958", restaurant);
-            Staff subordinate = new Waiter(3, "Elizabeth Bennett", "020-7946-0958", restaurant);
-            subordinate.AssignSupervisor(supervisor1);
-
-            // Act & Assert
-            var ex = Assert.Throws<InvalidOperationException>(() => subordinate.AssignSupervisor(supervisor2));
-            Assert.AreEqual("The new supervisor already has a different supervisor.", ex.Message, "Exception message should indicate that the new Supervisor already has a different supervisor.");
-        }
-
-        [Test]
-        public void TestNoInfiniteRecursion_InMutualSupervisoryAssignment()
+        public void TestNoInfiniteRecursion_InMutualSupervisoryAssignment_ShouldThrowException()
         {
             // Arrange
             Restaurant restaurant = new Restaurant(1, "The Crown", "221B Baker Street", "020-7946-0958", new List<Menu>(), null);
@@ -131,12 +104,16 @@ namespace Tests.AssociationTests.StaffReflexive;
 
             // Act
             staff1.AssignSupervisor(staff2);
-            staff2.AssignSupervisor(staff1);
+
+            // Attempt to create a circular supervisory relationship
+            var ex = Assert.Throws<InvalidOperationException>(() => staff2.AssignSupervisor(staff1));
 
             // Assert
-            Assert.AreEqual(staff2, staff1.Supervisor, "Staff1's Supervisor should be staff2.");
-            Assert.AreEqual(staff1, staff2.Supervisor, "Staff2's Supervisor should be staff1.");
-            Assert.AreEqual(staff1, staff2.Subordinate, "Staff2's Subordinate should be staff1.");
-            Assert.AreEqual(staff2, staff1.Subordinate, "Staff1's Subordinate should be staff2.");
+            Assert.AreEqual("Assigning this supervisor creates a circular supervisory relationship.", ex.Message, "Exception message should indicate that assigning this supervisor creates a circular supervisory relationship.");
         }
+
+        // Removed the following tests as they are no longer applicable:
+        // - TestAssignSupervisorWithExistingSubordinate_ShouldThrowException
+        // - TestAssignSupervisorAlreadyHasSupervisor_ShouldThrowException
     }
+}
