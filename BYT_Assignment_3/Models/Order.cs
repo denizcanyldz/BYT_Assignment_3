@@ -232,7 +232,7 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
         // Association Methods
         // -------------------------------
-         /// <summary>
+        /// <summary>
         /// Adds a Payment to the order, ensuring bidirectional consistency.
         /// </summary>
         /// <param name="payment">The Payment to add.</param>
@@ -295,6 +295,45 @@ namespace BYT_Assignment_3.Models
             // Add new payment
             AddPayment(newPayment);
         }
+
+        // -------------------------------
+        // Order Waiter Association
+        // -------------------------------
+
+
+        private Waiter? waiter;
+        public Waiter? Waiter => waiter;
+
+        public void SetWaiter(Waiter waiter, bool callWaiterAddOrder = true)
+        {
+            if (waiter == null)
+                throw new ArgumentNullException(nameof(waiter), "Waiter cannot be null.");
+            if (this.waiter == waiter)
+                return;
+
+            // Remove existing waiter if applicable
+            if (this.waiter != null)
+                this.waiter.RemoveOrder(this);
+
+            this.waiter = waiter;
+
+            // Add this order to the waiter's list if applicable
+            if (callWaiterAddOrder)
+                waiter.AddOrder(this);
+        }
+
+        public void RemoveWaiter(bool callWaiterRemoveOrder = true)
+        {
+            if (this.waiter == null)
+                return;
+
+            var oldWaiter = this.waiter;
+            this.waiter = null;
+
+            if (callWaiterRemoveOrder)
+                oldWaiter.RemoveOrder(this);
+        }
+
 
         // -------------------------------
         // Override Equals and GetHashCode

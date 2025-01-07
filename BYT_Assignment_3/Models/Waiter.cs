@@ -64,6 +64,50 @@
         }
 
         // -------------------------------
+        // Waiter Order Association
+        // -------------------------------
+        private List<Order> orders = new List<Order>();
+        public IReadOnlyList<Order> Orders => orders.AsReadOnly();
+
+        public void AddOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
+            if (orders.Contains(order))
+                throw new ArgumentException("Order is already associated with this waiter.");
+            if (order.Waiter != null && order.Waiter != this)
+                throw new ArgumentException("Order is already associated with another waiter.");
+
+            orders.Add(order);
+            order.SetWaiter(this, false); // Ensure reverse association
+        }
+
+        public void RemoveOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
+            if (!orders.Contains(order))
+                throw new ArgumentException("Order is not associated with this waiter.");
+
+            orders.Remove(order);
+            order.RemoveWaiter(false); // Ensure reverse disassociation
+        }
+
+        public void UpdateOrder(Order oldOrder, Order newOrder)
+        {
+            if (oldOrder == null || newOrder == null)
+                throw new ArgumentNullException("Orders cannot be null.");
+            if (!orders.Contains(oldOrder))
+                throw new ArgumentException("Old order is not associated with this waiter.");
+            if (orders.Contains(newOrder))
+                throw new ArgumentException("New order is already associated with this waiter.");
+
+            RemoveOrder(oldOrder);
+            AddOrder(newOrder);
+        }
+
+
+        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
