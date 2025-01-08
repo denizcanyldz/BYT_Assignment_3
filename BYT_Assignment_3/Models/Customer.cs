@@ -263,6 +263,8 @@ namespace BYT_Assignment_3.Models
 
             if (!_orders.Contains(Order))
                 throw new KeyNotFoundException("The specified Order is not associated with this Order.");
+            if (_orders.Count == 1)
+                throw new ArgumentException("There should be at least 1 order associated.");
 
             _orders.Remove(Order);
 
@@ -278,6 +280,8 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("Order cannot be null.");
             if (!_orders.Contains(oldOrder))
                 throw new ArgumentException("Order not found.");
+            if (_orders.Count == 1 && oldOrder == newOrder)
+                throw new InvalidOperationException("At least one Order must be associated with the customer.");
 
             _orders.Add(newOrder);
 
