@@ -126,6 +126,7 @@ namespace BYT_Assignment_3.Models
         // Association Methods
         // -------------------------------
 
+
         /// <summary>
         /// Adds a Reservation to the Customer.
         /// </summary>
@@ -164,7 +165,7 @@ namespace BYT_Assignment_3.Models
                 throw new ArgumentException("New Reservation already exists in the Customer.");
 
             // Remove old reservation
-            RemoveReservation(oldReservation);
+                                                RemoveReservation(oldReservation);
 
             // Add new reservation
             AddReservation(newReservation);
@@ -227,6 +228,69 @@ namespace BYT_Assignment_3.Models
                 // Excluding Reservations and Feedbacks for simplicity
             }
             return false;
+        }
+
+        /// <summary>
+        /// Association with Order
+        /// </summary>
+        [XmlIgnore]
+        private List<Order> _orders = new List<Order>();
+
+        public IReadOnlyList<Order> GetOrders() { return _orders.AsReadOnly(); }
+
+
+
+        public void AddOrder(Order Order)
+        {
+            if (Order == null)
+                throw new ArgumentException("Order cannot be null.");
+            if (_orders.Contains(Order))
+                return;
+
+            _orders.Add(Order);
+
+
+            if (Order._customer != this)
+            {
+                Order.AddCustomer(this);
+            }
+        }
+
+        public void RemoveOrder(Order Order)
+        {
+            if (Order == null)
+                throw new ArgumentException("Order cannot be null.");
+
+            if (!_orders.Contains(Order))
+                throw new KeyNotFoundException("The specified Order is not associated with this Order.");
+
+            _orders.Remove(Order);
+
+            if (Order._customer == this)
+            {
+                Order.RemoveCustomer(this);
+            }
+        }
+
+        public void ModifyOrder(Order newOrder, Order oldOrder)
+        {
+            if (newOrder == null || oldOrder == null)
+                throw new ArgumentException("Order cannot be null.");
+            if (!_orders.Contains(oldOrder))
+                throw new ArgumentException("Order not found.");
+
+            _orders.Add(newOrder);
+
+            // Update reverse relationship
+            if (oldOrder._customer == this)
+            {
+                oldOrder.RemoveCustomer(this);
+            }
+
+            if (newOrder._customer != this)
+            {
+                newOrder.AddCustomer(this);
+            }
         }
 
         public override int GetHashCode()

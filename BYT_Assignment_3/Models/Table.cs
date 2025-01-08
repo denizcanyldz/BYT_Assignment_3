@@ -236,6 +236,71 @@ namespace BYT_Assignment_3.Models
             return false;
         }
 
+        /// <summary>
+        /// Association with Order
+        /// </summary>
+        /// 
+
+        [XmlIgnore]
+        private List<Order> _orders = new List<Order>();
+
+        public IReadOnlyList<Order> GetOrders() { return _orders.AsReadOnly(); }
+
+
+
+        public void AddOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentException("Order cannot be null.");
+            if (_orders.Contains(order))
+                return;
+
+            _orders.Add(order);
+
+            if (order._table != this)
+            {
+                order.AddTable(this);
+            }
+        }
+
+        public void RemoveOrder(Order order)
+        {
+            if (order == null)
+                throw new ArgumentException("Order cannot be null.");
+
+            if (!_orders.Contains(order))
+                throw new KeyNotFoundException("The specified Order is not associated with this customer.");
+
+            _orders.Remove(order);
+
+            if (order._table == this)
+            {
+                order.RemoveTable(this);
+            }
+        }
+
+        public void ModifyOrder(Order newOrder, Order oldOrder)
+        {
+            if (newOrder == null || oldOrder == null)
+                throw new ArgumentException("Order cannot be null.");
+            if (!_orders.Contains(oldOrder))
+                throw new ArgumentException("Order not found.");
+
+            int index = _orders.IndexOf(oldOrder);
+            _orders[index] = newOrder;
+
+            // Update reverse relationship
+            if (oldOrder._table == this)
+            {
+                oldOrder.RemoveTable(this);
+            }
+
+            if (newOrder._table != this)
+            {
+                newOrder.AddTable(this);
+            }
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(TableNumber, MaxSeats, Location, SeatingArrangement);

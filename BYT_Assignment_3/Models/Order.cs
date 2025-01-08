@@ -334,6 +334,127 @@ namespace BYT_Assignment_3.Models
                 oldWaiter.RemoveOrder(this);
         }
 
+        /// <summary>
+        /// Order Table association
+        /// </summary>
+        [XmlIgnore]
+        public Table _table { get; private set; }
+
+
+
+        public void AddTable(Table table)
+        {
+            if (table == null)
+                throw new ArgumentException("table cannot be null.");
+            if (_table == table)
+                return;
+
+            _table = table;
+
+            if (table.GetOrders().Contains(this))
+            {
+                table.AddOrder(this);
+            }
+        }
+
+        public void RemoveTable(Table table)
+        {
+            if (table == null)
+                throw new ArgumentException("table cannot be null.");
+
+            if (_table != table)
+                throw new KeyNotFoundException("The specified table is not associated with this customer.");
+
+            _table = null;
+
+            if (table.GetOrders().Contains(this))
+            {
+                table.RemoveOrder(this);
+            }
+        }
+
+        public void ModifyTable(Table newtable, Table oldtable)
+        {
+            if (newtable == null || oldtable == null)
+                throw new ArgumentException("table cannot be null.");
+            if (_table == oldtable)
+                throw new ArgumentException("table not found.");
+
+            _table = newtable;
+
+            // Update reverse relationship
+            if (oldtable.GetOrders().Contains(this))
+            {
+                oldtable.RemoveOrder(this);
+            }
+
+            if (!newtable.GetOrders().Contains(this))
+            {
+                newtable.AddOrder(this);
+            }
+        }
+
+
+        /// <summary>
+        /// Association with Customer
+        /// </summary>
+        [XmlIgnore]
+        public Customer _customer { get; private set; }
+
+
+
+        public void AddCustomer(Customer Customer)
+        {
+            if (Customer == null)
+                throw new ArgumentException("Customer cannot be null.");
+            if (_customer == Customer)
+                return;
+
+            _customer = Customer;
+
+            if (Customer.GetOrders().Contains(this))
+            {
+                Customer.AddOrder(this);
+            }
+        }
+
+        public void RemoveCustomer(Customer Customer)
+        {
+            if (Customer == null)
+                throw new ArgumentException("Customer cannot be null.");
+
+            if (_customer != Customer)
+                throw new KeyNotFoundException("The specified Customer is not associated with this customer.");
+
+            _customer = null;
+
+            if (Customer.GetOrders().Contains(this))
+            {
+                Customer.RemoveOrder(this);
+            }
+        }
+
+        public void ModifyCustomer(Customer newCustomer, Customer oldCustomer)
+        {
+            if (newCustomer == null || oldCustomer == null)
+                throw new ArgumentException("Customer cannot be null.");
+            if (_customer != oldCustomer)
+                throw new ArgumentException("Customer not found.");
+
+            _customer = newCustomer;
+
+            // Update reverse relationship
+            if (oldCustomer.GetOrders().Contains(this))
+            {
+                oldCustomer.RemoveOrder(this);
+            }
+
+            if (!newCustomer.GetOrders().Contains(this))
+            {
+                newCustomer.AddOrder(this);
+            }
+        }
+
 
         // -------------------------------
         // Override Equals and GetHashCode
