@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace BYT_Assignment_3.Models
@@ -224,6 +226,67 @@ namespace BYT_Assignment_3.Models
                 // Excluding ParentOrder to simplify equality
             }
             return false;
+        }
+
+        /// <summary>
+        /// Association with MenuItem
+        /// </summary>
+
+        [XmlIgnore]
+        public MenuItem _menuItem { get; private set; }
+
+        
+
+        public void AddMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+            if (_menuItem == menuItem)
+                return;
+
+            _menuItem = menuItem;
+
+            if (menuItem._orderItem != this)
+            {
+                menuItem.AddOrderItem(this);
+            }
+        }
+
+        public void RemoveMenuItem(MenuItem menuItem)
+        {
+            if (menuItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+
+            if (_menuItem != menuItem)
+                throw new KeyNotFoundException("The specified MenuItem is not associated with this customer.");
+
+            _menuItem = null;
+
+            if (menuItem._orderItem == this)
+            {
+                menuItem.RemoveOrderItem(this);
+            }
+        }
+
+        public void ModifyMenuItem(MenuItem newMenuItem, MenuItem oldMenuItem)
+        {
+            if (newMenuItem == null || oldMenuItem == null)
+                throw new ArgumentException("MenuItem cannot be null.");
+            if (_menuItem == oldMenuItem)
+                throw new ArgumentException("MenuItem not found.");
+
+            _menuItem = newMenuItem;
+
+            // Update reverse relationship
+            if (oldMenuItem._orderItem == this)
+            {
+                oldMenuItem.RemoveOrderItem(this);
+            }
+
+            if (newMenuItem._orderItem != this)
+            {
+                newMenuItem.AddOrderItem(this);
+            }
         }
 
         public override int GetHashCode()

@@ -441,6 +441,63 @@ namespace BYT_Assignment_3.Models
             TotalMenuItems = menuItems.Count;
         }
 
+        /// <summary>
+        /// Association with OrderItem
+        /// </summary>
+        public OrderItem? _orderItem { get; private set; }
+
+        public void AddOrderItem(OrderItem orderItem)
+        {
+            if (orderItem == null)
+                throw new ArgumentException("OrderItem cannot be null.");
+            if (_orderItem == orderItem)
+                return;
+
+            _orderItem = orderItem;
+
+            if (orderItem._menuItem != this)
+            {
+                orderItem.AddMenuItem(this);
+            }
+        }
+
+        public void RemoveOrderItem(OrderItem orderItem)
+        {
+            if (orderItem == null)
+                throw new ArgumentException("OrderItem cannot be null.");
+
+            if (!(_orderItem == orderItem))
+                throw new KeyNotFoundException("The specified OrderItem is not associated with this MenuItem.");
+
+            _orderItem = null;
+
+            if (orderItem._menuItem == this)
+            {
+                orderItem.RemoveMenuItem(this);
+            }
+        }
+
+        public void ModifyOrderItem(OrderItem newOrderItem, OrderItem oldOrderItem)
+        {
+            if (newOrderItem == null || oldOrderItem == null)
+                throw new ArgumentException("OrderItem cannot be null.");
+            if (_orderItem != oldOrderItem)
+                throw new ArgumentException("OrderItem not found.");
+
+            _orderItem = newOrderItem;
+
+            // Update reverse relationship
+            if (oldOrderItem._menuItem == this)
+            {
+                oldOrderItem.RemoveMenuItem(this);
+            }
+
+            if (newOrderItem._menuItem != this)
+            {
+                newOrderItem.AddMenuItem(this);
+            }
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(MenuItemID, Name, IsAvailable, BasePrice, Calories, DiscountPrice, PreparationTime);
