@@ -80,6 +80,8 @@ namespace BYT_Assignment_3.Models
         public Manager(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null, string? department = null)
             : base(staffID, name, contactNumber, restaurant)
         {
+
+            CurrentRole = StaffRole.Manager;
             Department = department;
             // Add to manager extent
             managers.Add(this);
@@ -91,6 +93,12 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public Manager() : base() { }
+
+
+         public void GenerateReport()
+    {
+        Console.WriteLine($"{Name} is generating a report.");
+    }
 
         // -------------------------------
         // Override Equals and GetHashCode

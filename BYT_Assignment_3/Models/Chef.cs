@@ -182,6 +182,8 @@ namespace BYT_Assignment_3.Models
         public Chef(int staffID, string name, List<string?>? specialties = null, string? contactNumber = null)
             : base(staffID, name, contactNumber)
         {
+
+            CurrentRole = StaffRole.Chef;
             if (specialties != null)
             {
                 foreach (var specialty in specialties)
@@ -202,6 +204,11 @@ namespace BYT_Assignment_3.Models
         {
             Specialties = new List<string?>();
             MenuItems = new List<MenuItem>();
+        }
+
+        public void PrepareOrder()
+        {
+            Console.WriteLine($"{Name} is preparing an order.");
         }
 
         // -------------------------------

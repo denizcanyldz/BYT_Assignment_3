@@ -1,9 +1,9 @@
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class WaiterBartender : Staff
+    public class WaiterBartender : Bartender, IWaiter
     {
-         // -------------------------------
+        // -------------------------------
         // Class/Static Attributes
         // -------------------------------
         private static int totalWaiterBartenders = 0;
@@ -65,6 +65,23 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
+        // IWaiter.TipsCollected
+        // (Separate internal field for tips)
+        // -------------------------------
+        private double tipsCollected;
+
+        double IWaiter.TipsCollected
+        {
+            get => tipsCollected;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Tips cannot be negative.");
+                tipsCollected = value;
+            }
+        }
+
+        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
@@ -77,6 +94,7 @@ namespace BYT_Assignment_3.Models
         public WaiterBartender(int staffID, string name, double? bonus = null, string? contactNumber = null)
             : base(staffID, name, contactNumber)
         {
+            CurrentRole = StaffRole.WaiterBartender;
             Bonus = bonus;
 
             // Add to WaiterBartender extent
@@ -87,8 +105,33 @@ namespace BYT_Assignment_3.Models
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public WaiterBartender() : base() { }
-        
+        public WaiterBartender() : base()
+        {
+            CurrentRole = StaffRole.WaiterBartender;
+        }
+
+        // -------------------------------
+        // IWaiter Methods
+        // -------------------------------
+        void IWaiter.TakeOrder()
+        {
+            Console.WriteLine($"{Name} (WaiterBartender) is taking an order.");
+        }
+
+        void IWaiter.ServeOrder()
+        {
+            Console.WriteLine($"{Name} (WaiterBartender) is serving an order.");
+        }
+
+        void IWaiter.ProcessPayment()
+        {
+            Console.WriteLine($"{Name} (WaiterBartender) is processing a payment.");
+        }
+
+
+
+
+
         /// <summary>
         /// Determines whether the specified object is equal to the current WaiterBartender.
         /// </summary>
@@ -111,5 +154,7 @@ namespace BYT_Assignment_3.Models
         {
             return HashCode.Combine(StaffID, Name, ContactNumber, Bonus);
         }
+
+
     }
 }

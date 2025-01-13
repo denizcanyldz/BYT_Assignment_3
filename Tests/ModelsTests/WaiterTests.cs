@@ -26,8 +26,8 @@ namespace Tests.ModelsTests
             var waiter = new Waiter(
                 staffID: 1,
                 name: "Daniel",
-                contactNumber: "987-654-3210",
-                tipsCollected: true
+                contactNumber: "987-654-3210"
+                
             );
 
             // Assert
@@ -51,8 +51,8 @@ namespace Tests.ModelsTests
             // Arrange
             var waiter = new Waiter(
                 staffID: 2,
-                name: "Eve",
-                tipsCollected: false // contactNumber defaults to null
+                name: "Eve"
+                // contactNumber defaults to null
             );
 
             // Act

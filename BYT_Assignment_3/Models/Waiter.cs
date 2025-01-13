@@ -1,7 +1,7 @@
 ﻿namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class Waiter : Staff
+    public class Waiter : Staff, IWaiter
     {
         // -------------------------------
         // Class/Static Attribute
@@ -49,16 +49,18 @@
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private bool tipsCollected;
+        private double tipsCollected;
 
         /// <summary>
         /// Gets or sets whether tips have been collected.
         /// </summary>
-        public bool TipsCollected
+        public double TipsCollected
         {
             get => tipsCollected;
             set
             {
+                if (value < 0)
+                    throw new ArgumentException("Tips cannot be negative.");
                 tipsCollected = value;
             }
         }
@@ -113,10 +115,11 @@
         /// <summary>
         /// Initializes a new instance of the Waiter class with mandatory and optional attributes.
         /// </summary>
-        public Waiter(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null, bool tipsCollected = false)
+        public Waiter(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null, double initialTips = 0)
             : base(staffID, name, contactNumber, restaurant)
         {
-            TipsCollected = tipsCollected;
+            CurrentRole = StaffRole.Waiter;
+            TipsCollected = initialTips;
 
             // Add to waiter extent
             waiters.Add(this);
@@ -129,6 +132,24 @@
         /// </summary>
         public Waiter() : base() { }
 
+
+        // -------------------------------
+        // IWaiter Methods
+        // -------------------------------
+        public void TakeOrder()
+        {
+            Console.WriteLine($"{Name} (Waiter) is taking an order.");
+        }
+
+        public void ServeOrder()
+        {
+            Console.WriteLine($"{Name} (Waiter) is serving an order.");
+        }
+
+        public void ProcessPayment()
+        {
+            Console.WriteLine($"{Name} (Waiter) is processing a payment.");
+        }
         // -------------------------------
         // Override Equals and GetHashCode
         // -------------------------------

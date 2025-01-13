@@ -99,16 +99,24 @@ namespace BYT_Assignment_3.Models
         public Restaurant? Restaurant => restaurant;
 
         // -------------------------------
+        // Role
+        // -------------------------------
+        public StaffRole CurrentRole { get; protected set; }
+
+        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
         /// Initializes a new instance of the Staff class with mandatory and optional attributes.
         /// </summary>
+        /// 
+        
         protected Staff(int staffID, string name, string? contactNumber = null, Restaurant? restaurant = null)
         {
             StaffID = staffID;
             Name = name;
             ContactNumber = contactNumber;
+            CurrentRole = StaffRole.None;
 
             if (restaurant != null)
             {
@@ -124,6 +132,15 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         protected Staff() { }
+
+        public void SwitchRole(Staff newRole){
+            if(newRole == null) throw new ArgumentNullException(nameof(newRole));
+
+            newRole.Name = this.Name;
+            newRole.contactNumber = this.contactNumber;
+
+            Console.WriteLine($"{Name} switched from {CurrentRole} to {newRole.CurrentRole}.");
+        }
 
         // -------------------------------
         // Association Methods

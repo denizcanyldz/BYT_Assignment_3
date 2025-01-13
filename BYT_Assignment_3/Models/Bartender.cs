@@ -13,7 +13,7 @@ namespace BYT_Assignment_3.Models
         // Class/Static Attribute
         // -------------------------------
         private static int totalBartenders = 0;
-        
+
 
         /// <summary>
         /// Gets or sets the total number of bartenders.
@@ -61,16 +61,22 @@ namespace BYT_Assignment_3.Models
         public Bartender(int staffID, string name, string? contactNumber = null)
             : base(staffID, name, contactNumber)
         {
+            CurrentRole = StaffRole.Bartender;
             // Add to bartender extent
             bartenders.Add(this);
             TotalBartenders = bartenders.Count;
         }
 
-        /// <summary>
+        /// <summary>       
         /// Parameterless constructor for serialization.
         /// </summary>
         public Bartender() : base() { }
-        
+
+        public void MixDrink()
+        {
+            Console.WriteLine($"{Name} is mixing a drink.");
+        }
+
         /// <summary>
         /// Determines whether the specified object is equal to the current Bartender.
         /// </summary>
