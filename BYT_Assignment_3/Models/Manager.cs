@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BYT_Assignment_3.Interfaces;
 
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class Manager : Staff
+    public class Manager : Staff, IManager, IRole
     {
+        public string RoleName => "Manager";
+
         // -------------------------------
         // Class/Static Attributes
         // -------------------------------
@@ -72,6 +70,12 @@ namespace BYT_Assignment_3.Models
         }
 
         // -------------------------------
+        // Multi-Aspect Inheritance Attributes
+        // -------------------------------
+        // Example: Managers can have fixed roles like "HR" or "Operations"
+        // These roles are assigned using the AssignFixedRole method from Staff
+
+        // -------------------------------
         // Constructors
         // -------------------------------
         /// <summary>
@@ -81,16 +85,46 @@ namespace BYT_Assignment_3.Models
             : base(staffID, name, contactNumber, restaurant)
         {
             Department = department;
+            // Assign fixed role if needed
+            AssignFixedRole(this); // Assuming Manager itself represents a fixed role
+
             // Add to manager extent
             managers.Add(this);
             TotalManagers = managers.Count;
         }
 
-
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>
-        public Manager() : base() { }
+        public Manager() : base() 
+        {
+            // Assign fixed role if needed
+            AssignFixedRole(this); // Assuming Manager itself represents a fixed role
+        }
+
+        // -------------------------------
+        // IManager Implementation
+        // -------------------------------
+        public void AssignStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentNullException(nameof(staff), "Staff cannot be null.");
+            // Implement logic to assign staff to the manager
+            // For example, setting the manager as the supervisor
+            staff.AssignSupervisor(this);
+        }
+
+        public void RemoveStaff(Staff staff)
+        {
+            if (staff == null)
+                throw new ArgumentNullException(nameof(staff), "Staff cannot be null.");
+            // Implement logic to remove staff from the manager
+            // For example, removing the manager as the supervisor
+            if (staff.Supervisor == this)
+            {
+                staff.RemoveSupervisor();
+            }
+        }
 
         // -------------------------------
         // Override Equals and GetHashCode

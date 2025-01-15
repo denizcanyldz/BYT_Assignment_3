@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using BYT_Assignment_3.Interfaces;
 
 namespace BYT_Assignment_3.Models
 {
@@ -13,6 +14,118 @@ namespace BYT_Assignment_3.Models
     [XmlInclude(typeof(Manager))]
     public abstract class Staff
     {
+        // -------------------------------
+        // Dynamic Inheritance Attributes
+        // -------------------------------
+        [XmlIgnore]
+        private IRole? currentDynamicRole;
+
+        /// <summary>
+        /// Gets the current dynamic role of the staff member.
+        /// </summary>
+        public IRole? CurrentDynamicRole => currentDynamicRole;
+
+        // -------------------------------
+        // Dynamic Inheritance Methods
+        // -------------------------------
+        /// <summary>
+        /// Assigns a new dynamic role to the staff member, replacing the current dynamic role.
+        /// </summary>
+        /// <param name="newRole">The new dynamic role to assign.</param>
+        public void AssignDynamicRole(IRole newRole)
+        {
+            if (newRole == null)
+                throw new ArgumentNullException(nameof(newRole), "New dynamic role cannot be null.");
+
+            // Optionally, perform cleanup based on currentDynamicRole
+            if (currentDynamicRole is IDisposable disposableRole)
+            {
+                disposableRole.Dispose();
+            }
+
+            currentDynamicRole = newRole;
+        }
+
+        /// <summary>
+        /// Removes the current dynamic role from the staff member.
+        /// </summary>
+        public void RemoveDynamicRole()
+        {
+            if (currentDynamicRole != null)
+            {
+                if (currentDynamicRole is IDisposable disposableRole)
+                {
+                    disposableRole.Dispose();
+                }
+                currentDynamicRole = null;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the staff member has a specific dynamic role.
+        /// </summary>
+        /// <typeparam name="T">The dynamic role type to check.</typeparam>
+        /// <returns>True if the staff member has the dynamic role; otherwise, false.</returns>
+        public bool HasDynamicRole<T>() where T : IRole
+        {
+            return currentDynamicRole is T;
+        }
+
+        /// <summary>
+        /// Retrieves the current dynamic role cast to the specified type.
+        /// </summary>
+        /// <typeparam name="T">The dynamic role type to retrieve.</typeparam>
+        /// <returns>The current dynamic role cast to type T.</returns>
+        public T? GetDynamicRole<T>() where T : class, IRole
+        {
+            return currentDynamicRole as T;
+        }
+
+        // -------------------------------
+        // Multi-Aspect Inheritance Attributes
+        // -------------------------------
+        [XmlArray("FixedRoles")]
+        [XmlArrayItem("Role", typeof(IRole), IsNullable = true)]
+        private List<IRole> fixedRoles = new List<IRole>();
+
+        /// <summary>
+        /// Gets a read-only list of fixed roles assigned to the staff member.
+        /// </summary>
+        public IReadOnlyList<IRole> FixedRoles => fixedRoles.AsReadOnly();
+
+        // -------------------------------
+        // Multi-Aspect Inheritance Methods
+        // -------------------------------
+        /// <summary>
+        /// Assigns a fixed role to the staff member. Fixed roles are immutable once assigned.
+        /// </summary>
+        /// <param name="role">The fixed role to assign.</param>
+        public void AssignFixedRole(IRole role)
+        {
+            if (role == null)
+                throw new ArgumentNullException(nameof(role), "Fixed role cannot be null.");
+
+            if (fixedRoles.Contains(role))
+                throw new ArgumentException("Role is already assigned as a fixed role.");
+
+            fixedRoles.Add(role);
+        }
+
+        /// <summary>
+        /// Removes a fixed role from the staff member.
+        /// </summary>
+        /// <param name="role">The fixed role to remove.</param>
+        public void RemoveFixedRole(IRole role)
+        {
+            if (role == null)
+                throw new ArgumentNullException(nameof(role), "Fixed role cannot be null.");
+
+            if (!fixedRoles.Contains(role))
+                throw new ArgumentException("Role not found among fixed roles.");
+
+            fixedRoles.Remove(role);
+        }
+
         // -------------------------------
         // Class/Static Attributes
         // -------------------------------
@@ -341,6 +454,15 @@ namespace BYT_Assignment_3.Models
 
             // Remove associations with Restaurant
             staff.RemoveRestaurantInternal();
+
+            // Remove fixed roles
+            foreach (var role in staff.fixedRoles.ToList())
+            {
+                staff.RemoveFixedRole(role);
+            }
+
+            // Remove dynamic role
+            staff.RemoveDynamicRole();
 
             // Remove from staffMembers list and update TotalStaff
             staffMembers.Remove(staff);

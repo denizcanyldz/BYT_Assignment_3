@@ -81,6 +81,7 @@ namespace BYT_Assignment_3.Persistences
                 allStaff.AddRange(Chef.GetAll());
                 allStaff.AddRange(Waiter.GetAll());
                 allStaff.AddRange(WaiterBartender.GetAll());
+                allStaff.AddRange(Manager.GetAll());
 
                 // Update the Staff class's extent
                 Staff.SetAll(allStaff);

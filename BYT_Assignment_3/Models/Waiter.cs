@@ -1,8 +1,11 @@
-﻿namespace BYT_Assignment_3.Models
+﻿using BYT_Assignment_3.Interfaces;
+
+namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class Waiter : Staff
+    public class Waiter : Staff, IWaiter, IRole
     {
+        public string RoleName => "Waiter";
         // -------------------------------
         // Class/Static Attribute
         // -------------------------------
@@ -49,7 +52,7 @@
         // -------------------------------
         // Optional Attributes
         // -------------------------------
-        private bool tipsCollected;
+        public bool tipsCollected;
 
         /// <summary>
         /// Gets or sets whether tips have been collected.
