@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using BYT_Assignment_3.Interfaces;
 
 namespace BYT_Assignment_3.Models
 {
-    public class Chef : Staff
+    [Serializable]
+    public class Chef : Staff, IRole, IChef
     {
+        public string RoleName => "Chef";
+
         // -------------------------------
         // Class/Static Attributes
         // -------------------------------

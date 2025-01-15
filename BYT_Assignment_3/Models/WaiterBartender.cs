@@ -1,9 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Serialization;
+using BYT_Assignment_3.Interfaces;
+
 namespace BYT_Assignment_3.Models
 {
     [Serializable]
-    public class WaiterBartender : Staff
+    public class WaiterBartender : Waiter, IBartender
     {
-         // -------------------------------
+        // -------------------------------
         // Class/Static Attributes
         // -------------------------------
         private static int totalWaiterBartenders = 0;
@@ -36,7 +42,7 @@ namespace BYT_Assignment_3.Models
         }
 
         /// <summary>
-        /// Sets the entire waiterBartender list (used during deserialization).
+        /// Sets the entire WaiterBartender list (used during deserialization).
         /// </summary>
         public static void SetAll(List<WaiterBartender> loadedWaiterBartenders)
         {
@@ -88,10 +94,22 @@ namespace BYT_Assignment_3.Models
         /// Parameterless constructor for serialization.
         /// </summary>
         public WaiterBartender() : base() { }
-        
-        /// <summary>
-        /// Determines whether the specified object is equal to the current WaiterBartender.
-        /// </summary>
+
+        // -------------------------------
+        // IBartender Implementation
+        // -------------------------------
+        public void MixDrink(string drinkName)
+        {
+            if (string.IsNullOrWhiteSpace(drinkName))
+                throw new ArgumentException("Drink name cannot be null or empty.");
+
+            Console.WriteLine($"{Name} is mixing a {drinkName}.");
+            // Implement drink mixing logic here
+        }
+
+        // -------------------------------
+        // Override Equals and GetHashCode
+        // -------------------------------
         public override bool Equals(object obj)
         {
             if (obj is WaiterBartender other)
@@ -104,9 +122,6 @@ namespace BYT_Assignment_3.Models
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(StaffID, Name, ContactNumber, Bonus);

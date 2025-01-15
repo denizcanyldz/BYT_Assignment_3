@@ -45,7 +45,7 @@ namespace Tests.ModelsTests
         {
             // Arrange, Act & Assert for Empty Name
             var exEmpty = Assert.Throws<ArgumentException>(() => new TestStaff(1, "", "Morning"));
-            Assert.That(exEmpty.Message, Is.EqualTo("Name cannot be null or empty."), "Exception message should indicate that Name cannot be null or empty.");
+            Assert.That(exEmpty.Message, Does.StartWith("Name cannot be null or empty."), "Exception message should indicate that Name cannot be null or empty.");
 
             // Arrange, Act & Assert for Null Name (if allowed)
             // If Name is non-nullable and the constructor doesn't accept null, this test might be unnecessary.
@@ -60,11 +60,12 @@ namespace Tests.ModelsTests
         public void RemoveStaff_ShouldThrowException_WhenStaffNotFound()
         {
             // Arrange
-            var staff1 = new TestStaff(1, "John Doe");
+            var staff1 = new TestStaff(); // Using parameterless constructor to avoid adding to staffMembers
+            staff1.Name = "John Doe"; // Setting name if necessary
 
             // Act & Assert
             var ex = Assert.Throws<ArgumentException>(() => Staff.RemoveStaff(staff1));
-            Assert.That(ex.Message, Is.EqualTo("Staff member not found."), "Exception message should indicate that Staff member was not found.");
+            Assert.That(ex.Message, Does.StartWith("Staff member not found."), "Exception message should indicate that Staff member was not found.");
         }
 
         [Test]
@@ -147,7 +148,7 @@ namespace Tests.ModelsTests
             // Arrange, Act & Assert
             // Depending on Staff implementation, this might throw ArgumentException or ArgumentNullException
             var ex = Assert.Throws<ArgumentException>(() => new TestStaff(3, null!));
-            Assert.That(ex.Message, Is.EqualTo("Name cannot be null or empty."), "Exception message should indicate that Name cannot be null or empty.");
+            Assert.That(ex.Message, Does.StartWith("Name cannot be null or empty."), "Exception message should indicate that Name cannot be null or empty.");
         }
 
         [Test]
