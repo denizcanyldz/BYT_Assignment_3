@@ -314,7 +314,38 @@ namespace BYT_Assignment_3.Models
             : this(restaurantId, name, address, contactNumber, new List<Menu>(), null)
         {
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the Restaurant class with mandatory and optional attributes, including initial Staff members.
+        /// Ensures that the Restaurant has at least one Staff member upon creation.
+        /// </summary>
+        /// <param name="restaurantId">Unique identifier for the Restaurant.</param>
+        /// <param name="name">Name of the Restaurant.</param>
+        /// <param name="address">Address of the Restaurant.</param>
+        /// <param name="contactNumber">Contact number of the Restaurant.</param>
+        /// <param name="menus">List of Menus offered by the Restaurant.</param>
+        /// <param name="initialStaff">One or more initial Staff members to associate with the Restaurant.</param>
+        /// <param name="openingHours">Optional opening hours of the Restaurant.</param>
+        public Restaurant(
+            int restaurantId,
+            string name,
+            string address,
+            string contactNumber,
+            List<Menu> menus,
+            IEnumerable<Staff> initialStaff,
+            Dictionary<string, string>? openingHours = null)
+            : this(restaurantId, name, address, contactNumber, menus, openingHours)
+        {
+            if (initialStaff == null || !initialStaff.Any())
+                throw new ArgumentException("At least one Staff member must be provided.", nameof(initialStaff));
 
+            foreach (var staff in initialStaff)
+            {
+                AddStaff(staff);
+            }
+        }
+        
+        
         /// <summary>
         /// Parameterless constructor for serialization.
         /// </summary>

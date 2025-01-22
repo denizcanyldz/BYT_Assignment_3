@@ -183,7 +183,7 @@ namespace BYT_Assignment_3.Models
         /// <param name="name">The name of the chef.</param>
         /// <param name="specialties">A list of specialties.</param>
         /// <param name="contactNumber">The contact number.</param>
-        public Chef(int staffID, string name, List<string?>? specialties = null, string? contactNumber = null)
+        public Chef(int staffID, string name, List<string?>? specialties = null, string contactNumber = null)
             : base(staffID, name, contactNumber)
         {
             if (specialties != null)

@@ -392,6 +392,23 @@ namespace BYT_Assignment_3.Models
             menuItems.Add(this);
             TotalMenuItems = menuItems.Count;
         }
+        
+        public MenuItem(int menuItemID, string name, double basePrice, int calories, double discountPrice, int preparationTime, Menu menu, bool isAvailable = true)
+        {
+            MenuItemID = menuItemID;
+            Name = name;
+            BasePrice = basePrice;
+            Calories = calories;
+            DiscountPrice = discountPrice;
+            PreparationTime = preparationTime;
+            IsAvailable = isAvailable;
+    
+            SetMenu(menu);
+
+            // Add to class extent and update total
+            menuItems.Add(this);
+            TotalMenuItems = menuItems.Count;
+        }
 
         /// <summary>
         /// Parameterless constructor for serialization.

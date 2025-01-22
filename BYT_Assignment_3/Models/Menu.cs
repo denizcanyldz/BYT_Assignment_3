@@ -132,15 +132,15 @@ namespace BYT_Assignment_3.Models
         public Menu(int menuId, List<MenuItem> menuItems)
         {
             MenuId = menuId;
-
-            if (menuItems == null)
-                throw new ArgumentException("MenuItems list cannot be null.");
-
+            
+            if (menuItems == null || !menuItems.Any())
+                throw new ArgumentException("Menu must contain at least one MenuItem.", nameof(menuItems));
+        
             foreach (var item in menuItems)
             {
                 AddMenuItem(item);
             }
-
+        
             // Add to class extent and update total
             menus.Add(this);
             TotalMenus = menus.Count;

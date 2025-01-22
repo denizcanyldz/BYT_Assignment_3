@@ -168,6 +168,63 @@ namespace BYT_Assignment_3.Models
             orders.Add(this);
             TotalOrders = orders.Count;
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the Order class with mandatory and optional attributes.
+        /// Ensures that the Order is associated with a Waiter upon creation.
+        /// </summary>
+        public Order(int orderID, DateTime orderDate, Table table, Waiter waiter, string? notes = null, string? discountCode = null)
+        {
+            OrderID = orderID;
+            OrderDate = orderDate;
+            Table = table;
+            Waiter = waiter;
+            Notes = notes;
+            DiscountCode = discountCode;
+
+            // Add to class extent
+            orders.Add(this);
+            TotalOrders = orders.Count;
+        }
+        
+        [XmlIgnore]
+        public Customer Customer { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the Order class with mandatory and optional attributes.
+        /// Ensures that the Order is associated with a Customer upon creation.
+        /// </summary>
+        /// <param name="orderID">Unique identifier for the order.</param>
+        /// <param name="orderDate">Date and time when the order was placed.</param>
+        /// <param name="table">Table associated with the order.</param>
+        /// <param name="customer">Customer who placed the order.</param>
+        /// <param name="notes">Optional notes for the order.</param>
+        /// <param name="discountCode">Optional discount code for the order.</param>
+        public Order(int orderID, DateTime orderDate, Table table, Customer customer, string? notes = null, string? discountCode = null)
+        {
+            if (customer == null)
+                throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
+
+            OrderID = orderID;
+            OrderDate = orderDate;
+            Table = table;
+            Notes = notes;
+            DiscountCode = discountCode;
+            Customer = customer;
+
+            // Initialize collections
+            orderItems = new List<OrderItem>();
+            payments = new List<Payment>();
+
+            // Add this order to the class extent and to the Customer's orders
+            orders.Add(this);
+            TotalOrders = orders.Count;
+
+            // Establish bidirectional association
+            customer.AddOrder(this);
+        }
+
+        
 
         /// <summary>
         /// Parameterless constructor for serialization.
@@ -301,8 +358,13 @@ namespace BYT_Assignment_3.Models
         // -------------------------------
 
 
-        private Waiter? waiter;
-        public Waiter? Waiter => waiter;
+        private Waiter waiter;
+
+        public Waiter Waiter
+        {
+            get => waiter;
+            set => waiter = value ?? throw new ArgumentNullException(nameof(value));
+        }
 
         public void SetWaiter(Waiter waiter, bool callWaiterAddOrder = true)
         {

@@ -126,6 +126,7 @@ namespace BYT_Assignment_3.Models
             TotalWaiters = waiters.Count;
         }
 
+        
 
         /// <summary>
         /// Parameterless constructor for serialization.

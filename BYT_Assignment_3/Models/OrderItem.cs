@@ -167,6 +167,35 @@ namespace BYT_Assignment_3.Models
             orderItems.Add(this);
             TotalOrderItems = orderItems.Count;
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the OrderItem class with mandatory and optional attributes.
+        /// Ensures that the OrderItem is associated with a parent Order upon creation.
+        /// </summary>
+        /// <param name="orderItemID">Unique identifier for the order item.</param>
+        /// <param name="itemName">Name of the item.</param>
+        /// <param name="quantity">Quantity ordered.</param>
+        /// <param name="price">Price per unit.</param>
+        /// <param name="parentOrder">The Order to which this item belongs.</param>
+        /// <param name="specialInstructions">Any special instructions for the item.</param>
+        public OrderItem(int orderItemID, string itemName, int quantity, double price, Order parentOrder, string? specialInstructions = null)
+        {
+            if (parentOrder == null)
+                throw new ArgumentNullException(nameof(parentOrder), "Parent Order cannot be null.");
+
+            OrderItemID = orderItemID;
+            ItemName = itemName;
+            Quantity = quantity;
+            Price = price;
+            SpecialInstructions = specialInstructions;
+
+            ParentOrder = parentOrder;
+            parentOrder.AddOrderItem(this); // Ensure bidirectional association
+
+            // Add to class extent
+            orderItems.Add(this);
+            TotalOrderItems = orderItems.Count;
+        }
 
         /// <summary>
         /// Parameterless constructor for serialization.
